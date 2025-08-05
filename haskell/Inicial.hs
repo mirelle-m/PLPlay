@@ -9,7 +9,6 @@ terminalSize = unsafeDupablePerformIO Terminal.getTermSize
 terminalHeight = fst terminalSize 
 terminalWidth = snd terminalSize 
 
--- Arte ASCII do nome do jogo
 logo :: [String]
 logo =
   [ " _____  _      _____  _           __     __"
@@ -19,27 +18,29 @@ logo =
   , "| |    | |____| |    | |____ / ____ \\| |  "
   , "|_|    |______|_|    |______/_/    \\_\\_|  "
   , "                                          "
-  , "         Bem-vindo(a) ao PLPlay              "
+  , "         Bem-vindo(a) ao PLPlay 📚             "
   ]
 
+centralizar :: Int -> String -> String
+centralizar largura texto =
+  let espacos = replicate ((largura - length texto) `div` 2) ' '
+  in espacos ++ texto
 
--- Mostra a arte, linha por linha, com atraso
 mostrarLogoAnimado :: IO ()
 mostrarLogoAnimado = mostrarLinhas logo
   where
     mostrarLinhas [] = return ()
     mostrarLinhas (l:ls) = do
-      putStrLn l
-      threadDelay 300000  -- 0.3 segundos
+      putStrLn $ centralizar terminalWidth l
+      threadDelay 300000  -- 0.3 segundo
       mostrarLinhas ls
 
--- Tela inicial
 paginaInicial :: IO ()
 paginaInicial = do
-  putStrLn "=============================================="
+  putStrLn $ replicate terminalWidth '='
   mostrarLogoAnimado
-  putStrLn "=============================================="
-  threadDelay 1000000  -- espera 1 segundo
+  putStrLn $ replicate terminalWidth '='
+  threadDelay 1000000
   putStrLn "\nPressione ENTER para continuar..."
   _ <- getLine
   return ()
