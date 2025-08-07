@@ -4,10 +4,10 @@ import Control.Concurrent (threadDelay)
 import Data.List (isInfixOf)
 
 -- imports de outros modulos
-import Utils (centralizar, limparTela, terminalWidth)
 import Navegacao (escolherOpcao)
 import MapaMissoes (imprimirMapa, escolherMissao)
 import Inicial (paginaInicial)
+import Utils (centralizar, limparTela, terminalWidth,carregarLogo)
 
 
 executarAplicacao :: IO ()
@@ -46,11 +46,13 @@ menuPrincipal = do
         1 -> do
             putStrLn "Mostrando Regras do jogo..."
             -- colocar funcao para realizar o que foi desejado
-            mostrarRegrasJogo
+            mostrarRegrasJogo "../banners/regras.txt"
+            putStrLn "\nPressione Enter para voltar ao menu..."
+            _ <- getLine
             menuPrincipal
         2 -> do
             putStrLn "Mostrando Mapa de Missões"
-            imprimirMapa
+            mostrarRegrasJogo "../banners/mapa.txt"
             putStrLn "\nPressione Enter para voltar ao menu..."
             _ <- getLine
             menuPrincipal
@@ -95,23 +97,14 @@ autenticar = do
             return True
 
 
-
-mostrarRegrasJogo:: IO()
-mostrarRegrasJogo = do
-  let largura = terminalWidth
-  putStrLn $ replicate largura '='
-  putStrLn $ centralizar largura "📘 Regras do PLPlay "
-  putStrLn "🎯 Missões são quizzes sobre temas de cada estágio da disciplina PLP."
-  putStrLn "🔒 Missões são desbloqueadas uma por vez — conclua uma para liberar a próxima!"
-  putStrLn "❗ Limite de erros por missão:"
-  putStrLn "    🟢 Fácil: até 3 erros"
-  putStrLn "    🟡 Médio: até 2 erros"
-  putStrLn "    🔴 Difícil: 1 erro"
-  putStrLn "💥 Se ultrapassar o limite, a missão reinicia do zero"
-  putStrLn "🏆 Vença chefões e conquiste medalhas com seu desempenho"
-  putStrLn "📚 Revise perguntas erradas no modo Treino (flashcards)"
-  putStrLn "📈 Aprenda jogando e avance até o final da jornada!"
-  putStrLn $ replicate largura '='
-  putStrLn "\nPressione Enter para voltar ao menu..."
-  _ <- getLine
-  return ()
+mostrarRegrasJogo :: FilePath -> IO ()
+mostrarRegrasJogo caminho = do
+  linhas <- carregarLogo caminho
+  mostrarLinhas linhas
+  where
+    mostrarLinhas [] = return ()
+    mostrarLinhas (l:ls) = do
+      putStrLn $ centralizar terminalWidth l
+      threadDelay 100000 
+      mostrarLinhas ls
+    

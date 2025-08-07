@@ -4,13 +4,8 @@ import Control.Concurrent (threadDelay)
 import qualified Terminal
 import System.IO
 import System.IO.Unsafe (unsafeDupablePerformIO)
-import Utils (centralizar, limparTela, terminalWidth)
+import Utils (centralizar, limparTela, terminalWidth,carregarLogo)
 
-
-carregarLogo :: FilePath -> IO [String]
-carregarLogo caminho = do
-  conteudo <- readFile caminho
-  return (lines conteudo)
 
 mostrarLogoAnimado :: FilePath -> IO ()
 mostrarLogoAnimado caminho = do
@@ -28,7 +23,6 @@ paginaInicial :: IO ()
 paginaInicial = do
   mostrarLogoAnimado "../banners/plplay.txt"
   threadDelay 1000000
-  putStrLn "\nPressione ENTER para continuar..."
   _ <- getLine
   limparTela
   return ()
