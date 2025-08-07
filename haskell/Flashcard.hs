@@ -40,24 +40,25 @@ gerarIndices max = do
 
 
 iniciaTreino :: [Flashcard] -> IO ()
-iniciaTreino flashcards = do
+iniciaTreino _ = do
     limpaTela
     exibirBanner "../banners/inicio_treino.txt"
-    mostrarTodos flashcards
+    _ <- getLine
+    todos <- carregaFlashcards
+    selecionados <- escolherAleatorios 10 todos
+    mostrarTodos selecionados
     limpaTela
     exibirBanner "../banners/fim_treino.txt"
-    putStr "Escolha: "
     hFlush stdout
     opcao <- getLine
     case opcao of
-        "1" -> iniciaTreino flashcards
+        "1" -> iniciaTreino []
         _   -> return ()
 
 exibirBanner :: FilePath -> IO ()
 exibirBanner caminho = do
     conteudo <- readFile caminho
     putStrLn conteudo
-    _ <- getLine
     return ()
 
 mostrarTodos :: [Flashcard] -> IO ()
