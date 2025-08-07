@@ -1,12 +1,6 @@
--- Main.hs
 module Main where
-import Auth (mainAuth)
-import Inicial (paginaInicial)
 
-import Navegacao (escolherOpcao)
-
+import Menu (showMenu)
 
 main :: IO ()
-main = do
-    paginaInicial
-    mainAuth
+main = showMenu
