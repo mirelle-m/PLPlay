@@ -6,6 +6,7 @@ import Data.List.Split (splitOn)
 import System.Console.ANSI (clearScreen)
 import System.Random.Stateful (newStdGen)
 import System.Random.Shuffle (shuffle')
+import Util (limpaTela)
 
 data Flashcard = Flashcard {
     pergunta :: String,
@@ -40,12 +41,11 @@ gerarIndices max = do
 
 iniciaTreino :: [Flashcard] -> IO ()
 iniciaTreino flashcards = do
-    clearScreen
-    putStrLn "Iniciando treino com flashcards...\n"
+    limpaTela
+    exibirBanner "../banners/inicio_treino.txt"
     mostrarTodos flashcards
-    putStrLn "\nTreino finalizado!\n"
-    putStrLn "1 - Repetir treino"
-    putStrLn "2 - Voltar ao menu"
+    limpaTela
+    exibirBanner "../banners/fim_treino.txt"
     putStr "Escolha: "
     hFlush stdout
     opcao <- getLine
@@ -53,15 +53,23 @@ iniciaTreino flashcards = do
         "1" -> iniciaTreino flashcards
         _   -> return ()
 
+exibirBanner :: FilePath -> IO ()
+exibirBanner caminho = do
+    conteudo <- readFile caminho
+    putStrLn conteudo
+    _ <- getLine
+    return ()
 
 mostrarTodos :: [Flashcard] -> IO ()
 mostrarTodos [] = return ()
 mostrarTodos (f:fs) = do
-    clearScreen
-    putStrLn $ "Pergunta:\n\n" ++ pergunta f
-    putStr "\n(Aperte Enter para ver a resposta)"
+    limpaTela
+    putStrLn $ pergunta f
+    putStr "\n\n\nAperte Enter para ver a resposta"
     _ <- getLine
-    putStrLn $ "\nResposta:\n\n" ++ resposta f
-    putStr "\n(Aperte Enter para continuar)"
+    putStrLn "\n\n\n=========================================================================\n\n\n"
+    putStrLn $ resposta f
+    putStr "\n\n\nAperte Enter para continuar"
     _ <- getLine
+    limpaTela
     mostrarTodos fs
