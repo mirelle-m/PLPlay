@@ -35,7 +35,7 @@ menuPrincipal = do
     putStrLn $ centralizar largura "MENU PRINCIPAL"
     putStrLn $ replicate largura '='
     escolha <- escolherOpcao opcoes
-
+    
     case escolha of
         0 -> do
             putStrLn "Iniciando novo jogo..."
@@ -51,7 +51,10 @@ menuPrincipal = do
         2 -> do
             putStrLn "Mostrando Mapa de Missões"
             imprimirMapa
+            putStrLn "\nPressione Enter para voltar ao menu..."
+            _ <- getLine
             menuPrincipal
+            
         3 -> do
             putStrLn "Continuando jogo"
             missao <- escolherMissao
@@ -61,7 +64,6 @@ menuPrincipal = do
             putStrLn "Saindo do jogo... Até a próxima! 👋"
         _ -> putStrLn "Opção inválida."
 
--- Retorna True se autenticado ou cadastrado com sucesso
 autenticar :: IO Bool
 autenticar = do
     let largura = terminalWidth
@@ -99,25 +101,17 @@ mostrarRegrasJogo = do
   let largura = terminalWidth
   putStrLn $ replicate largura '='
   putStrLn $ centralizar largura "📘 Regras do PLPlay "
-  threadDelay 100000
   putStrLn "🎯 Missões são quizzes sobre temas de cada estágio da disciplina PLP."
-  threadDelay 10000
   putStrLn "🔒 Missões são desbloqueadas uma por vez — conclua uma para liberar a próxima!"
-  threadDelay 10000
   putStrLn "❗ Limite de erros por missão:"
-  threadDelay 10000
   putStrLn "    🟢 Fácil: até 3 erros"
-  threadDelay 10000
   putStrLn "    🟡 Médio: até 2 erros"
-  threadDelay 10000
   putStrLn "    🔴 Difícil: 1 erro"
-  threadDelay 10000
   putStrLn "💥 Se ultrapassar o limite, a missão reinicia do zero"
-  threadDelay 10000
   putStrLn "🏆 Vença chefões e conquiste medalhas com seu desempenho"
-  threadDelay 10000
   putStrLn "📚 Revise perguntas erradas no modo Treino (flashcards)"
-  threadDelay 10000
   putStrLn "📈 Aprenda jogando e avance até o final da jornada!"
-  threadDelay 10000
   putStrLn $ replicate largura '='
+  putStrLn "\nPressione Enter para voltar ao menu..."
+  _ <- getLine
+  return ()

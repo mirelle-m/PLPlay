@@ -4,6 +4,7 @@ import Control.Concurrent (threadDelay)
 import qualified Terminal
 import System.IO
 import System.IO.Unsafe (unsafeDupablePerformIO)
+import Utils (centralizar, limparTela, terminalWidth)
 
 terminalSize = unsafeDupablePerformIO Terminal.getTermSize
 terminalHeight = fst terminalSize 
@@ -40,6 +41,3 @@ paginaInicial = do
   _ <- getLine
   limparTela
   return ()
-
-limparTela :: IO ()
-limparTela = putStr "\ESC[2J\ESC[H"
