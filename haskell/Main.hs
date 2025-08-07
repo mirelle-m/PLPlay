@@ -1,6 +1,6 @@
 module Main where
 
-import Menu (showMenu)
+import Menu (executarAplicacao)
 
 main :: IO ()
-main = showMenu
+main = executarAplicacao

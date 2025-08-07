@@ -3,10 +3,8 @@ module MapaMissoes where
 import qualified Terminal
 import System.IO.Unsafe (unsafeDupablePerformIO)
 import Data.List (isPrefixOf)
-
-terminalSize = unsafeDupablePerformIO Terminal.getTermSize
-terminalHeight = fst terminalSize
-terminalWidth = snd terminalSize
+import Utils(centralizar,terminalWidth)
+import Navegacao (escolherOpcao)
 
 missoesMapeadas :: [(String, [String])]
 missoesMapeadas =
@@ -46,7 +44,28 @@ imprimirMapa = do
   mapM_ putStrLn (gerarLinhasMapa missoesMapeadas)
   putStrLn $ replicate largura '='
 
-centralizar :: Int -> String -> String
-centralizar largura texto =
-  let espacos = replicate ((largura - length texto) `div` 2) ' '
-  in espacos ++ texto
+
+escolherMissao :: IO String
+escolherMissao = do
+  let nomesEstagios = map fst missoesMapeadas
+  let estagios = map ("📍 " ++) nomesEstagios
+  putStrLn "\n🌍 Escolha um estágio:"
+  idxEstagio <- escolherOpcao estagios
+  let (nomeEstagio, missoes) = missoesMapeadas !! idxEstagio
+  escolherMissaoDoEstagio nomeEstagio missoes
+
+
+escolherMissaoDoEstagio :: String -> [String] -> IO String
+escolherMissaoDoEstagio nomeEstagio missoes = do
+  let largura = terminalWidth
+  putStrLn $ replicate largura '='
+  putStrLn $ centralizar largura $ "🧭 " ++ nomeEstagio
+  putStrLn $ replicate largura '='
+  idxMissao <- escolherOpcao (map formatarMissao missoes)
+  return (missoes !! idxMissao)
+
+
+formatarMissao :: String -> String
+formatarMissao m =
+  let emoji = if "Chefão" `elem` words m then "👾 " else "🧭 "
+  in emoji ++ m

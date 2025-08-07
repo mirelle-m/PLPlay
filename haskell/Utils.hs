@@ -1,4 +1,4 @@
-module Utils (centralizar, terminalWidth, terminalHeight) where
+module Utils (centralizar,limparTela, terminalWidth, terminalHeight) where
 
 import qualified Terminal
 import System.IO.Unsafe (unsafeDupablePerformIO)
@@ -11,3 +11,7 @@ centralizar :: Int -> String -> String
 centralizar largura texto =
     let espacos = replicate ((largura - length texto) `div` 2) ' '
     in espacos ++ texto
+
+
+limparTela :: IO ()
+limparTela = putStr "\ESC[2J\ESC[H"
