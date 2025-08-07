@@ -24,7 +24,8 @@ mainAuth = do
     putStrLn "Digite sua senha:"
     senha <- getLine
     let userData = "username: " ++ username ++ "\nprogresso: Missao3 csharp\n"
-
+    limparTela
+    
     exists <- doesFileExist "user.txt"
     if exists
         then do
@@ -61,7 +62,7 @@ mostrarRegrasJogo = do
   threadDelay 10000
   putStrLn "    🟡 Médio: até 2 erros"
   threadDelay 10000
-  putStrLn "    🔴 Médio: até 2 erros"
+  putStrLn "    🔴 Difícil: 1 erro"
   threadDelay 10000
   putStrLn "💥 Se ultrapassar o limite, a missão reinicia do zero"
   threadDelay 10000
@@ -72,6 +73,8 @@ mostrarRegrasJogo = do
   putStrLn "📈 Aprenda jogando e avance até o final da jornada!"
   threadDelay 10000
   putStrLn $ replicate largura '='
+  limparTela
+
 showMenu :: IO ()
 showMenu = do
     let largura = terminalWidth
@@ -88,3 +91,6 @@ centralizar :: Int -> String -> String
 centralizar largura texto =
     let espacos = replicate ((largura - length texto) `div` 2) ' '
     in espacos ++ texto
+
+limparTela :: IO ()
+limparTela = putStr "\ESC[2J\ESC[H"
