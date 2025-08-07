@@ -9,37 +9,37 @@ terminalSize = unsafeDupablePerformIO Terminal.getTermSize
 terminalHeight = fst terminalSize 
 terminalWidth = snd terminalSize 
 
--- Arte ASCII do nome do jogo
-logo :: [String]
-logo =
-  [ " _____  _      _____  _           __     __"
-  , "|  __ \\| |    |  __ \\| |        /\\ \\   / /"
-  , "| |__) | |    | |__) | |       /  \\ \\_/ / "
-  , "|  ___/| |    |  ___/| |      / /\\ \\   /  "
-  , "| |    | |____| |    | |____ / ____ \\| |  "
-  , "|_|    |______|_|    |______/_/    \\_\\_|  "
-  , "                                          "
-  , "         Bem-vindo(a) ao PLPlay              "
-  ]
+centralizar :: Int -> String -> String
+centralizar largura texto =
+  let espacos = replicate ((largura - length texto) `div` 2) ' '
+  in espacos ++ texto
 
 
--- Mostra a arte, linha por linha, com atraso
-mostrarLogoAnimado :: IO ()
-mostrarLogoAnimado = mostrarLinhas logo
+carregarLogo :: FilePath -> IO [String]
+carregarLogo caminho = do
+  conteudo <- readFile caminho
+  return (lines conteudo)
+
+mostrarLogoAnimado :: FilePath -> IO ()
+mostrarLogoAnimado caminho = do
+  linhas <- carregarLogo caminho
+  mostrarLinhas linhas
   where
     mostrarLinhas [] = return ()
     mostrarLinhas (l:ls) = do
-      putStrLn l
-      threadDelay 300000  -- 0.3 segundos
+      putStrLn $ centralizar terminalWidth l
+      threadDelay 100000 
       mostrarLinhas ls
 
--- Tela inicial
+
 paginaInicial :: IO ()
 paginaInicial = do
-  putStrLn "=============================================="
-  mostrarLogoAnimado
-  putStrLn "=============================================="
-  threadDelay 1000000  -- espera 1 segundo
+  mostrarLogoAnimado "../banners/plplay.txt"
+  threadDelay 1000000
   putStrLn "\nPressione ENTER para continuar..."
   _ <- getLine
+  limparTela
   return ()
+
+limparTela :: IO ()
+limparTela = putStr "\ESC[2J\ESC[H"
