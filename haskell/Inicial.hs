@@ -1,11 +1,10 @@
 module Inicial where
 
 import Control.Concurrent (threadDelay)
-import qualified Terminal
 import System.IO
 import System.IO.Unsafe (unsafeDupablePerformIO)
-import Utils (centralizar, limparTela, terminalWidth,carregarLogo)
-
+import Terminal qualified
+import Utils (carregarLogo, centralizar, limparTela, terminalWidth)
 
 mostrarLogoAnimado :: FilePath -> IO ()
 mostrarLogoAnimado caminho = do
@@ -13,11 +12,10 @@ mostrarLogoAnimado caminho = do
   mostrarLinhas linhas
   where
     mostrarLinhas [] = return ()
-    mostrarLinhas (l:ls) = do
+    mostrarLinhas (l : ls) = do
       putStrLn $ centralizar terminalWidth l
-      threadDelay 100000 
+      threadDelay 100000
       mostrarLinhas ls
-
 
 paginaInicial :: IO ()
 paginaInicial = do

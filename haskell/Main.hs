@@ -1,6 +1,8 @@
 module Main where
 
-import Menu (executarAplicacao)
-
+import Inicial (paginaInicial)
+import Auth (loopAutenticacao)
 main :: IO ()
-main = executarAplicacao
+main = do
+    paginaInicial
+    loopAutenticacao
