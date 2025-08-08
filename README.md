@@ -1,7 +1,7 @@
 # PLPlay
 
 ## Descrição
-PLPlay é um sistema gamificação para facilitar o aprendizado da disciplina de Paradigmas de Linguagens de Programação (PLP). O jogo combina missões temáticas, quizzes de múltipla escolha e revisão por flashcards para tornar o estudo mais dinâmico e eficiente.
+PLPlay é um sistema de gamificação para facilitar o aprendizado da disciplina de Paradigmas de Linguagens de Programação (PLP). O jogo combina missões temáticas, quizzes de múltipla escolha e revisão por flashcards para ajudar alunos a aprenderem de forma mais eficiente, bem como estudar de maneira dinâmica os conteúdos propostos na disciplina de PLP.
 
 ## Funcionalidades
 - Cadastro e login com navegação via teclado.
