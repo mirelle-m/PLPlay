@@ -18,7 +18,7 @@ Para usar o PLPlay é bem simples. Siga os passos abaixo:
 1. Clone o repositório:
 
    ```bash
-   git clone https://github.com/seuusuario/PLPlay.git
+   https://github.com/mirelle-m/PLPlay.git
 2. Na raiz do projeto, execute o script de instalação para instalar as dependências necessárias e iniciar o jogo:
 
    ```bash
