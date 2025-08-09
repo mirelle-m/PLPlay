@@ -5,26 +5,26 @@ import Control.Exception
 import Data.Char (isAlphaNum, isDigit, isLower, isUpper)
 import Data.List (isInfixOf)
 import Data.Typeable (Typeable)
+import Utils (centralizar, limparTela, terminalWidth, mostrarLogoCentralizado,limparTelaCompleta)
 import Inicial (paginaInicial)
 import MapaMissoes (escolherMissao, imprimirMapa)
-import Navegacao (escolherOpcao)
+import Navegacao (escolherOpcaoComTitulo)
 import System.Directory (doesFileExist)
-import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
+import Utils (carregarLogo, centralizar, limparTela, terminalWidth, mostrarLogoCentralizado,limparTelaCompleta)
 
 menuPrincipal :: IO ()
 menuPrincipal = do
-  let largura = larguraTerminal
-  let opcoes =
-        [ "🎮 Iniciar Novo Jogo",
-          "📰 Ver Regras do Jogo",
-          "🗺️  Ver Mapa de Missões",
-          "💾 Continuar Jogo",
-          "🚪 Sair"
-        ]
-  putStrLn $ replicate largura '='
-  putStrLn $ centralizar largura "MENU PRINCIPAL"
-  putStrLn $ replicate largura '='
-  escolha <- escolherOpcao opcoes
+  let largura = terminalWidth
+  let opcoes = [ "🎮 Iniciar Novo Jogo"
+                 , "📰 Ver Regras do Jogo"
+                 , "🗺️  Ver Mapa de Missões"
+                 , "🎯 Modo Treino"
+                 , "💾 Continuar Jogo"
+                 , "🚪 Sair"
+                 ]
+  escolha <- escolherOpcaoComTitulo "../banners/menu_principal.txt" opcoes
+  limparTelaCompleta
+
   case escolha of
     0 -> do
       putStrLn "Iniciando Novo Jogo..."
@@ -44,11 +44,14 @@ menuPrincipal = do
       _ <- getLine
       menuPrincipal
     3 -> do
+      putStrLn "Modo Treino"
+      menuPrincipal
+    4 -> do
       putStrLn "Continuando jogo"
       missao <- escolherMissao
       putStrLn $ "\nVocê selecionou: " ++ missao
       menuPrincipal
-    4 -> do
+    5 -> do
       putStrLn "Saindo do jogo... Até a próxima!"
     _ -> putStrLn "Opção inválida." >> menuPrincipal
 
@@ -60,6 +63,6 @@ mostrarRegrasJogo caminho = do
   where
     mostrarLinhas [] = return ()
     mostrarLinhas (l : ls) = do
-      putStrLn $ centralizar larguraTerminal l
+      putStrLn $ centralizar terminalWidth l
       threadDelay 100000
       mostrarLinhas ls

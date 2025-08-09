@@ -1,9 +1,10 @@
-module Navegacao (escolherOpcao) where
+module Navegacao (escolherOpcaoComTitulo) where
 
 import System.IO
 import Data.Char (ord)
 import Control.Monad (when)
-import Utils (limparTela)
+
+import Utils ( centralizar, terminalWidth, limparTela,limparTelaCompleta,mostrarLogoCentralizado)
 
 configsTemporariasTerminal :: IO a -> IO a
 configsTemporariasTerminal action = do
@@ -16,15 +17,22 @@ configsTemporariasTerminal action = do
     hSetEcho stdin oldEcho
     return result
 
-
-escolherOpcao :: [String] -> IO Int
-escolherOpcao opcoes = configsTemporariasTerminal $ do
-    go 0
+escolherOpcaoComTitulo :: FilePath -> [String] -> IO Int
+escolherOpcaoComTitulo path opcoes = configsTemporariasTerminal $ go 0
   where
     n = length opcoes
-    go selectedIndex = do        
-        limparTela       
-        mapM_ (uncurry exibirOpcao) (zip [0..] opcoes)       
+    largura = terminalWidth
+
+    go selectedIndex = do
+        -- Limpa a tela inteira
+        limparTelaCompleta
+
+        mostrarLogoCentralizado path 
+
+        -- Lista de opções
+        mapM_ (uncurry exibirOpcao) (zip [0..] opcoes)
+
+        -- Captura tecla
         key <- getKey
         case key of
             "UP"    -> go ((selectedIndex - 1 + n) `mod` n)
@@ -32,12 +40,13 @@ escolherOpcao opcoes = configsTemporariasTerminal $ do
             "ENTER" -> return selectedIndex
             _       -> go selectedIndex
         where
-            exibirOpcao :: Int -> String -> IO ()
-            exibirOpcao index texto = do
-                if index == selectedIndex
-                    then putStrLn $ "-> " ++ texto
-                    else putStrLn $ "   " ++ texto
-
+        exibirOpcao :: Int -> String -> IO ()
+        exibirOpcao index texto =
+            if index == selectedIndex
+                then putStrLn $ "-> " ++ texto
+                else putStrLn $ "   " ++ texto
+        
+    
 
 data Key = ArrowUp | ArrowDown | Enter | Other deriving (Show, Eq)
 

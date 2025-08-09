@@ -7,9 +7,9 @@ import Data.List (isInfixOf)
 import Data.Typeable (Typeable)
 import MapaMissoes (escolherMissao, imprimirMapa)
 import Menu (menuPrincipal)
-import Navegacao (escolherOpcao)
+import Navegacao (escolherOpcaoComTitulo)
 import System.Directory (doesFileExist)
-import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
+import Utils (carregarLogo, centralizar, limparTela, terminalWidth)
 
 loopAutenticacao :: IO ()
 loopAutenticacao = do
@@ -48,7 +48,7 @@ validarSenha senha
 
 autenticarUsuario :: IO Bool
 autenticarUsuario = do
-  let largura = larguraTerminal
+  let largura = terminalWidth
   putStrLn $ replicate largura '='
   putStrLn $ centralizar largura "🔐 AUTENTICAÇÃO"
   putStrLn $ replicate largura '='

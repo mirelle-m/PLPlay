@@ -1,4 +1,4 @@
-module Terminal (getTamanhoTerminal) where
+module Terminal (getTermSize) where
 
 import Foreign
     (Ptr,
@@ -26,8 +26,8 @@ foreign import ccall "sys/ioctl.h ioctl"
   ioctl :: CInt -> CInt -> Ptr WinSize -> IO CInt
 
 
-getTamanhoTerminal :: IO (Int, Int)
-getTamanhoTerminal = 
+getTermSize :: IO (Int, Int)
+getTermSize = 
   with (WinSize 0 0) $ \ws -> do
     throwErrnoIfMinus1 "ioctl" $
       ioctl (1) (21523) ws

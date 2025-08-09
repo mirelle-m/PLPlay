@@ -3,9 +3,10 @@ module MapaMissoes where
 import qualified Terminal
 import System.IO.Unsafe (unsafeDupablePerformIO)
 import Data.List (isPrefixOf)
-import Utils(centralizar, larguraTerminal)
-import Navegacao (escolherOpcao)
-
+import Utils(centralizar,terminalWidth, mostrarLogoCentralizado)
+import Navegacao (escolherOpcaoComTitulo)
+import Inicial (mostrarLogoAnimada)
+ 
 missoesMapeadas :: [(String, [String])]
 missoesMapeadas =
   [ ("Primeiro Estágio"
@@ -39,31 +40,27 @@ gerarLinhasMapa = concatMap gerarLinhasEstagio
 
 imprimirMapa :: IO ()
 imprimirMapa = do
-  let largura = larguraTerminal
-  putStrLn $ replicate largura '='
-  putStrLn $ centralizar larguraTerminal "MAPA DE MISSÕES"
-  putStrLn $ replicate largura '='
-  mapM_ putStrLn (gerarLinhasMapa missoesMapeadas)
-  putStrLn $ replicate largura '='
-
+  mostrarLogoCentralizado "../banners/mapa.txt"
 
 escolherMissao :: IO String
 escolherMissao = do
   let nomesEstagios = map fst missoesMapeadas
   let estagios = map ("📍 " ++) nomesEstagios
-  putStrLn "\n🌍 Escolha um estágio:"
-  idxEstagio <- escolherOpcao estagios
+  idxEstagio <- escolherOpcaoComTitulo "../banners/escolha_estagio.txt" estagios
   let (nomeEstagio, missoes) = missoesMapeadas !! idxEstagio
   escolherMissaoDoEstagio nomeEstagio missoes
 
 
 escolherMissaoDoEstagio :: String -> [String] -> IO String
 escolherMissaoDoEstagio nomeEstagio missoes = do
-  let largura = larguraTerminal
-  putStrLn $ replicate largura '='
-  putStrLn $ centralizar largura $ "🧭 " ++ nomeEstagio
-  putStrLn $ replicate largura '='
-  idxMissao <- escolherOpcao (map formatarMissao missoes)
+  let nomeEstagioPath = case nomeEstagio of
+        "Primeiro Estágio" -> "../banners/primeiro_estagio.txt"
+        "Segundo Estágio"  -> "../banners/segundo_estagio.txt"
+        "Terceiro Estágio" -> "../banners/terceiro_estagio.txt"
+        _                  -> "../banners/default.txt"  -- fallback caso não bata com nenhum
+
+  let largura = terminalWidth
+  idxMissao <- escolherOpcaoComTitulo nomeEstagioPath (map formatarMissao missoes)
   return (missoes !! idxMissao)
 
 

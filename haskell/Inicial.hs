@@ -4,7 +4,7 @@ import Control.Concurrent (threadDelay)
 import System.IO
 import System.IO.Unsafe (unsafeDupablePerformIO)
 import Terminal qualified
-import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
+import Utils (carregarLogo, centralizar, limparTela, terminalWidth)
 
 mostrarLogoAnimada :: FilePath -> IO ()
 mostrarLogoAnimada caminho = do
@@ -13,7 +13,7 @@ mostrarLogoAnimada caminho = do
   where
     mostrarLinhas [] = return ()
     mostrarLinhas (l : ls) = do
-      putStrLn $ centralizar larguraTerminal l
+      putStrLn $ centralizar terminalWidth l
       threadDelay 100000
       mostrarLinhas ls
 
