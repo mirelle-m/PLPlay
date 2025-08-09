@@ -33,7 +33,7 @@ menuPrincipal = do
                  ]
                           
     escolha <- escolherOpcaoComTitulo "../banners/menu_principal.txt" opcoes
-    limparTelaCompleta
+    
     case escolha of
         0 -> do
             putStrLn "Iniciando novo jogo..."
@@ -55,12 +55,10 @@ menuPrincipal = do
             putStrLn "\nPressione Enter para voltar ao menu..."
             _ <- getLine
             menuPrincipal
-            
+
         3 -> do
-            putStrLn "Continuando jogo"
-            missao <- escolherMissao
-            putStrLn $ "\n🚀 Você selecionou: " ++ missao
-            menuPrincipal
+            limparTelaCompleta
+            -- TODO 
         4 -> do
             putStrLn "Saindo do jogo... Até a próxima! 👋"
         _ -> putStrLn "Opção inválida."
