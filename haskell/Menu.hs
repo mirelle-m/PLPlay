@@ -27,12 +27,13 @@ menuPrincipal = do
     let opcoes = [ "🎮 Iniciar Novo Jogo"
                  , "📰 Ver Regras do Jogo"
                  , "🗺️  Ver Mapa de Missões"
+                 , "🎯 Modo Treino"
                  , "💾 Continuar Jogo"
                  , "🚪 Sair"
                  ]
                           
     escolha <- escolherOpcaoComTitulo "../banners/menu_principal.txt" opcoes
-    
+    limparTelaCompleta
     case escolha of
         0 -> do
             putStrLn "Iniciando novo jogo..."
@@ -44,11 +45,12 @@ menuPrincipal = do
             limparTelaCompleta
             -- colocar funcao para realizar o que foi desejado
             mostrarRegrasJogo
+
             putStrLn "\nPressione Enter para voltar ao menu..."
             _ <- getLine
             menuPrincipal
         2 -> do
-            putStrLn "Mostrando Mapa de Missões"
+            limparTelaCompleta
             imprimirMapa
             putStrLn "\nPressione Enter para voltar ao menu..."
             _ <- getLine
