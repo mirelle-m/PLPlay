@@ -1,9 +1,7 @@
 module Flashcard where
 
-import System.Random (randomRIO)
 import System.IO (hFlush, stdout)
 import Data.List.Split (splitOn)
-import System.Console.ANSI (clearScreen)
 import System.Random.Stateful (newStdGen)
 import System.Random.Shuffle (shuffle')
 import Utils (limparTela)
