@@ -27,6 +27,7 @@ escolherOpcaoComTitulo path opcoes = withTerminalSettings $ go 0
 
     go selectedIndex = do
         -- Limpa a tela inteira
+        limparTelaCompleta
 
         mostrarLogoCentralizado path 
 
@@ -49,7 +50,7 @@ escolherOpcaoComTitulo path opcoes = withTerminalSettings $ go 0
                 then putStrLn $ "-> " ++ texto
                 else putStrLn $ "   " ++ texto
         
-        limparTelaCompleta
+    
 
 -- | Enum para representar as teclas especiais que vamos capturar.
 data Key = ArrowUp | ArrowDown | Enter | Other deriving (Show, Eq)
