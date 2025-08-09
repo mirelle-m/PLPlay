@@ -28,7 +28,6 @@ paginaInicial :: IO ()
 paginaInicial = do
   mostrarLogoAnimado "../banners/plplay.txt"
   threadDelay 1000000
-  putStrLn "\nPressione ENTER para continuar..."
   _ <- getLine
   limparTela
   return ()

@@ -4,8 +4,8 @@ import Control.Concurrent (threadDelay)
 import Data.List (isInfixOf)
 
 -- imports de outros modulos
-import Utils (centralizar, limparTela, terminalWidth)
-import Navegacao (escolherOpcao)
+import Utils (centralizar, limparTela, terminalWidth, mostrarLogoCentralizado,limparTelaCompleta)
+import Navegacao (escolherOpcaoComTitulo)
 import MapaMissoes (imprimirMapa, escolherMissao)
 import Inicial (paginaInicial)
 
@@ -30,11 +30,8 @@ menuPrincipal = do
                  , "💾 Continuar Jogo"
                  , "🚪 Sair"
                  ]
-
-    putStrLn $ replicate largura '='
-    putStrLn $ centralizar largura "MENU PRINCIPAL"
-    putStrLn $ replicate largura '='
-    escolha <- escolherOpcao opcoes
+                          
+    escolha <- escolherOpcaoComTitulo "../banners/menu_principal.txt" opcoes
     
     case escolha of
         0 -> do
@@ -44,9 +41,11 @@ menuPrincipal = do
             putStrLn $ "\n🚀 Você selecionou: " ++ missao
             menuPrincipal
         1 -> do
-            putStrLn "Mostrando Regras do jogo..."
+            limparTelaCompleta
             -- colocar funcao para realizar o que foi desejado
             mostrarRegrasJogo
+            putStrLn "\nPressione Enter para voltar ao menu..."
+            _ <- getLine
             menuPrincipal
         2 -> do
             putStrLn "Mostrando Mapa de Missões"
@@ -98,20 +97,5 @@ autenticar = do
 
 mostrarRegrasJogo:: IO()
 mostrarRegrasJogo = do
-  let largura = terminalWidth
-  putStrLn $ replicate largura '='
-  putStrLn $ centralizar largura "📘 Regras do PLPlay "
-  putStrLn "🎯 Missões são quizzes sobre temas de cada estágio da disciplina PLP."
-  putStrLn "🔒 Missões são desbloqueadas uma por vez — conclua uma para liberar a próxima!"
-  putStrLn "❗ Limite de erros por missão:"
-  putStrLn "    🟢 Fácil: até 3 erros"
-  putStrLn "    🟡 Médio: até 2 erros"
-  putStrLn "    🔴 Difícil: 1 erro"
-  putStrLn "💥 Se ultrapassar o limite, a missão reinicia do zero"
-  putStrLn "🏆 Vença chefões e conquiste medalhas com seu desempenho"
-  putStrLn "📚 Revise perguntas erradas no modo Treino (flashcards)"
-  putStrLn "📈 Aprenda jogando e avance até o final da jornada!"
-  putStrLn $ replicate largura '='
-  putStrLn "\nPressione Enter para voltar ao menu..."
-  _ <- getLine
+  mostrarLogoCentralizado "../banners/regras.txt" 
   return ()

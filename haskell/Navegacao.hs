@@ -1,8 +1,9 @@
-module Navegacao (escolherOpcao) where
+module Navegacao (escolherOpcaoComTitulo) where
 
 import System.IO
 import Data.Char (ord)
 import Control.Monad (when)
+import Utils ( centralizar, terminalWidth, limparTela,limparTelaCompleta,mostrarLogoCentralizado)
 
 -- | Desabilita o buffer e o eco do terminal, executa a ação e depois restaura as configurações.
 withTerminalSettings :: IO a -> IO a
@@ -16,35 +17,39 @@ withTerminalSettings action = do
     hSetEcho stdin oldEcho
     return result
 
--- | Exibe as opções e permite a navegação por setas (cima/baixo) e seleção com Enter.
-escolherOpcao :: [String] -> IO Int
-escolherOpcao opcoes = withTerminalSettings $ do
-    go 0
+
+
+escolherOpcaoComTitulo :: FilePath -> [String] -> IO Int
+escolherOpcaoComTitulo path opcoes = withTerminalSettings $ go 0
   where
     n = length opcoes
-    go selectedIndex = do
-        -- Limpa a tela
-        putStr "\ESC[2J"
-        -- Move o cursor para o topo
-        putStr "\ESC[H"
+    largura = terminalWidth
 
-        -- Exibe as opções
+    go selectedIndex = do
+        -- Limpa a tela inteira
+
+        mostrarLogoCentralizado path 
+
+        -- Lista de opções
         mapM_ (uncurry exibirOpcao) (zip [0..] opcoes)
 
-        -- Espera a entrada do teclado
+        -- Captura tecla
         key <- getKey
-
         case key of
-            "UP"   -> go ((selectedIndex - 1 + n) `mod` n)
-            "DOWN" -> go ((selectedIndex + 1) `mod` n)
+            "UP"    -> go ((selectedIndex - 1 + n) `mod` n)
+            "DOWN"  -> go ((selectedIndex + 1) `mod` n)
             "ENTER" -> return selectedIndex
-            _         -> go selectedIndex
-      where
+            _       -> go selectedIndex
+
+    
+        where
         exibirOpcao :: Int -> String -> IO ()
-        exibirOpcao index texto = do
+        exibirOpcao index texto =
             if index == selectedIndex
                 then putStrLn $ "-> " ++ texto
                 else putStrLn $ "   " ++ texto
+        
+        limparTelaCompleta
 
 -- | Enum para representar as teclas especiais que vamos capturar.
 data Key = ArrowUp | ArrowDown | Enter | Other deriving (Show, Eq)
