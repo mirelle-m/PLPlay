@@ -3,9 +3,9 @@ module MapaMissoes where
 import qualified Terminal
 import System.IO.Unsafe (unsafeDupablePerformIO)
 import Data.List (isPrefixOf)
-import Utils(centralizar,terminalWidth, mostrarLogoCentralizado)
+import Utils(centralizar, larguraTerminal, mostrarLogoCentralizada)
 import Navegacao (escolherOpcaoComTitulo)
-import Inicial (mostrarLogoAnimado)
+import Inicial (mostrarLogoAnimada)
  
 missoesMapeadas :: [(String, [String])]
 missoesMapeadas =
@@ -26,6 +26,7 @@ missoesMapeadas =
       ])
   ]
 
+
 gerarLinhasMapa :: [(String, [String])] -> [String]
 gerarLinhasMapa = concatMap gerarLinhasEstagio
   where
@@ -36,9 +37,11 @@ gerarLinhasMapa = concatMap gerarLinhasEstagio
 
     emoji m = if "Chefão" `elem` words m then "👾 " else "🧭 "
 
+
 imprimirMapa :: IO ()
 imprimirMapa = do
-  mostrarLogoCentralizado "../banners/mapa.txt"
+  mostrarLogoCentralizada "../banners/mapa.txt"
+
 
 escolherMissao :: IO String
 escolherMissao = do
@@ -55,9 +58,8 @@ escolherMissaoDoEstagio nomeEstagio missoes = do
         "Primeiro Estágio" -> "../banners/primeiro_estagio.txt"
         "Segundo Estágio"  -> "../banners/segundo_estagio.txt"
         "Terceiro Estágio" -> "../banners/terceiro_estagio.txt"
-        _                  -> "../banners/default.txt"  -- fallback caso não bata com nenhum
-
-  let largura = terminalWidth
+        _                  -> "../banners/default.txt"
+  let largura = larguraTerminal
   idxMissao <- escolherOpcaoComTitulo nomeEstagioPath (map formatarMissao missoes)
   return (missoes !! idxMissao)
 

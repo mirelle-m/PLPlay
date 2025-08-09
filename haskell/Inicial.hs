@@ -1,32 +1,26 @@
 module Inicial where
 
 import Control.Concurrent (threadDelay)
-import qualified Terminal
 import System.IO
 import System.IO.Unsafe (unsafeDupablePerformIO)
-import Utils (centralizar, limparTela, terminalWidth)
+import Terminal qualified
+import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
 
-
-carregarLogo :: FilePath -> IO [String]
-carregarLogo caminho = do
-  conteudo <- readFile caminho
-  return (lines conteudo)
-
-mostrarLogoAnimado :: FilePath -> IO ()
-mostrarLogoAnimado caminho = do
+mostrarLogoAnimada :: FilePath -> IO ()
+mostrarLogoAnimada caminho = do
   linhas <- carregarLogo caminho
   mostrarLinhas linhas
   where
     mostrarLinhas [] = return ()
-    mostrarLinhas (l:ls) = do
-      putStrLn $ centralizar terminalWidth l
-      threadDelay 100000 
+    mostrarLinhas (l : ls) = do
+      putStrLn $ centralizar larguraTerminal l
+      threadDelay 100000
       mostrarLinhas ls
 
 
 paginaInicial :: IO ()
 paginaInicial = do
-  mostrarLogoAnimado "../banners/plplay.txt"
+  mostrarLogoAnimada "../banners/plplay.txt"
   threadDelay 1000000
   _ <- getLine
   limparTela
