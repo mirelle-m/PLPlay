@@ -1,11 +1,11 @@
-module Utils (centralizar,limparTela, terminalWidth, terminalHeight,carregarLogo ) where
+module Utils (centralizar, limparTela, larguraTerminal, alturaTerminal, carregarLogo) where
 
 import qualified Terminal
 import System.IO.Unsafe (unsafeDupablePerformIO)
 
-terminalSize = unsafeDupablePerformIO Terminal.getTermSize
-terminalHeight = fst terminalSize
-terminalWidth = snd terminalSize
+tamanhoTerminal = unsafeDupablePerformIO Terminal.getTermSize
+alturaTerminal = fst tamanhoTerminal
+larguraTerminal = snd tamanhoTerminal
 
 centralizar :: Int -> String -> String
 centralizar largura texto =

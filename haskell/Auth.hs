@@ -9,11 +9,11 @@ import MapaMissoes (escolherMissao, imprimirMapa)
 import Menu (menuPrincipal)
 import Navegacao (escolherOpcao)
 import System.Directory (doesFileExist)
-import Utils (carregarLogo, centralizar, limparTela, terminalWidth)
+import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
 
 loopAutenticacao :: IO ()
 loopAutenticacao = do
-  result <- try autenticar :: IO (Either AutenticacaoException Bool)
+  result <- try autenticarUsuario :: IO (Either AutenticacaoException Bool)
   case result of
     Left (UsuarioInvalido msg) -> putStrLn ("Erro: " ++ msg) >> loopAutenticacao
     Left (SenhaInvalida msg) -> putStrLn ("Erro: " ++ msg) >> loopAutenticacao
@@ -35,6 +35,7 @@ validarUsername nome
   | not (all (\c -> isAlphaNum c || c == '_') nome) = Left "Nome de usuário só pode conter letras, números e underscore (_)."
   | otherwise = Right ()
 
+
 validarSenha :: String -> Either String ()
 validarSenha senha
   | null senha = Left "Senha não pode ser vazia."
@@ -44,9 +45,10 @@ validarSenha senha
   | not (any isDigit senha) = Left "Senha deve conter ao menos um número."
   | otherwise = Right ()
 
-autenticar :: IO Bool
-autenticar = do
-  let largura = terminalWidth
+
+autenticarUsuario :: IO Bool
+autenticarUsuario = do
+  let largura = larguraTerminal
   putStrLn $ replicate largura '='
   putStrLn $ centralizar largura "🔐 AUTENTICAÇÃO"
   putStrLn $ replicate largura '='

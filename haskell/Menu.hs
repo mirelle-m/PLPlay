@@ -9,11 +9,11 @@ import Inicial (paginaInicial)
 import MapaMissoes (escolherMissao, imprimirMapa)
 import Navegacao (escolherOpcao)
 import System.Directory (doesFileExist)
-import Utils (carregarLogo, centralizar, limparTela, terminalWidth)
+import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
 
 menuPrincipal :: IO ()
 menuPrincipal = do
-  let largura = terminalWidth
+  let largura = larguraTerminal
   let opcoes =
         [ "🎮 Iniciar Novo Jogo",
           "📰 Ver Regras do Jogo",
@@ -21,20 +21,18 @@ menuPrincipal = do
           "💾 Continuar Jogo",
           "🚪 Sair"
         ]
-
   putStrLn $ replicate largura '='
   putStrLn $ centralizar largura "MENU PRINCIPAL"
   putStrLn $ replicate largura '='
   escolha <- escolherOpcao opcoes
-
   case escolha of
     0 -> do
-      putStrLn "Iniciando novo jogo..."
+      putStrLn "Iniciando Novo Jogo..."
       missao <- escolherMissao
       putStrLn $ "\n Você selecionou: " ++ missao
       menuPrincipal
     1 -> do
-      putStrLn "Mostrando Regras do jogo..."
+      putStrLn "Mostrando Regras do Jogo..."
       mostrarRegrasJogo "../banners/regras.txt"
       putStrLn "\nPressione Enter para voltar ao menu..."
       _ <- getLine
@@ -48,11 +46,12 @@ menuPrincipal = do
     3 -> do
       putStrLn "Continuando jogo"
       missao <- escolherMissao
-      putStrLn $ "\n Você selecionou: " ++ missao
+      putStrLn $ "\nVocê selecionou: " ++ missao
       menuPrincipal
     4 -> do
       putStrLn "Saindo do jogo... Até a próxima!"
     _ -> putStrLn "Opção inválida." >> menuPrincipal
+
 
 mostrarRegrasJogo :: FilePath -> IO ()
 mostrarRegrasJogo caminho = do
@@ -61,6 +60,6 @@ mostrarRegrasJogo caminho = do
   where
     mostrarLinhas [] = return ()
     mostrarLinhas (l : ls) = do
-      putStrLn $ centralizar terminalWidth l
+      putStrLn $ centralizar larguraTerminal l
       threadDelay 100000
       mostrarLinhas ls

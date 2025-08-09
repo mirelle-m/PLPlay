@@ -3,7 +3,7 @@ module MapaMissoes where
 import qualified Terminal
 import System.IO.Unsafe (unsafeDupablePerformIO)
 import Data.List (isPrefixOf)
-import Utils(centralizar,terminalWidth)
+import Utils(centralizar, larguraTerminal)
 import Navegacao (escolherOpcao)
 
 missoesMapeadas :: [(String, [String])]
@@ -25,6 +25,7 @@ missoesMapeadas =
       ])
   ]
 
+
 gerarLinhasMapa :: [(String, [String])] -> [String]
 gerarLinhasMapa = concatMap gerarLinhasEstagio
   where
@@ -35,11 +36,12 @@ gerarLinhasMapa = concatMap gerarLinhasEstagio
 
     emoji m = if "Chefão" `elem` words m then "👾 " else "🧭 "
 
+
 imprimirMapa :: IO ()
 imprimirMapa = do
-  let largura = terminalWidth
+  let largura = larguraTerminal
   putStrLn $ replicate largura '='
-  putStrLn $ centralizar terminalWidth "MAPA DE MISSÕES"
+  putStrLn $ centralizar larguraTerminal "MAPA DE MISSÕES"
   putStrLn $ replicate largura '='
   mapM_ putStrLn (gerarLinhasMapa missoesMapeadas)
   putStrLn $ replicate largura '='
@@ -57,7 +59,7 @@ escolherMissao = do
 
 escolherMissaoDoEstagio :: String -> [String] -> IO String
 escolherMissaoDoEstagio nomeEstagio missoes = do
-  let largura = terminalWidth
+  let largura = larguraTerminal
   putStrLn $ replicate largura '='
   putStrLn $ centralizar largura $ "🧭 " ++ nomeEstagio
   putStrLn $ replicate largura '='

@@ -3,10 +3,10 @@ module Navegacao (escolherOpcao) where
 import System.IO
 import Data.Char (ord)
 import Control.Monad (when)
+import Utils (limparTela)
 
--- | Desabilita o buffer e o eco do terminal, executa a ação e depois restaura as configurações.
-withTerminalSettings :: IO a -> IO a
-withTerminalSettings action = do
+configsTemporariasTerminal :: IO a -> IO a
+configsTemporariasTerminal action = do
     oldBuffering <- hGetBuffering stdin
     oldEcho <- hGetEcho stdin
     hSetBuffering stdin NoBuffering
@@ -16,42 +16,32 @@ withTerminalSettings action = do
     hSetEcho stdin oldEcho
     return result
 
--- | Exibe as opções e permite a navegação por setas (cima/baixo) e seleção com Enter.
+
 escolherOpcao :: [String] -> IO Int
-escolherOpcao opcoes = withTerminalSettings $ do
+escolherOpcao opcoes = configsTemporariasTerminal $ do
     go 0
   where
     n = length opcoes
-    go selectedIndex = do
-        -- Limpa a tela
-        putStr "\ESC[2J"
-        -- Move o cursor para o topo
-        putStr "\ESC[H"
-
-        -- Exibe as opções
-        mapM_ (uncurry exibirOpcao) (zip [0..] opcoes)
-
-        -- Espera a entrada do teclado
+    go selectedIndex = do        
+        limparTela       
+        mapM_ (uncurry exibirOpcao) (zip [0..] opcoes)       
         key <- getKey
-
         case key of
-            "UP"   -> go ((selectedIndex - 1 + n) `mod` n)
-            "DOWN" -> go ((selectedIndex + 1) `mod` n)
+            "UP"    -> go ((selectedIndex - 1 + n) `mod` n)
+            "DOWN"  -> go ((selectedIndex + 1) `mod` n)
             "ENTER" -> return selectedIndex
-            _         -> go selectedIndex
-      where
-        exibirOpcao :: Int -> String -> IO ()
-        exibirOpcao index texto = do
-            if index == selectedIndex
-                then putStrLn $ "-> " ++ texto
-                else putStrLn $ "   " ++ texto
+            _       -> go selectedIndex
+        where
+            exibirOpcao :: Int -> String -> IO ()
+            exibirOpcao index texto = do
+                if index == selectedIndex
+                    then putStrLn $ "-> " ++ texto
+                    else putStrLn $ "   " ++ texto
 
--- | Enum para representar as teclas especiais que vamos capturar.
+
 data Key = ArrowUp | ArrowDown | Enter | Other deriving (Show, Eq)
 
--- | Lê uma sequência de teclas e a interpreta como uma `Key`.
--- | Lê uma sequência de teclas e a interpreta como uma `Key`.
--- Captura de tecla especial (setas e Enter)
+
 getKey :: IO String
 getKey = do
     c1 <- getChar
