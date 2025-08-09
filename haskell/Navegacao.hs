@@ -4,7 +4,7 @@ import System.IO
 import Data.Char (ord)
 import Control.Monad (when)
 
-import Utils ( centralizar, terminalWidth, limparTela,limparTelaCompleta,mostrarLogoCentralizado)
+import Utils (centralizar, larguraTerminal, limparTela, limparTelaCompleta, mostrarLogoCentralizada)
 
 configsTemporariasTerminal :: IO a -> IO a
 configsTemporariasTerminal action = do
@@ -21,18 +21,12 @@ escolherOpcaoComTitulo :: FilePath -> [String] -> IO Int
 escolherOpcaoComTitulo path opcoes = configsTemporariasTerminal $ go 0
   where
     n = length opcoes
-    largura = terminalWidth
+    largura = larguraTerminal
 
     go selectedIndex = do
-        -- Limpa a tela inteira
         limparTelaCompleta
-
-        mostrarLogoCentralizado path 
-
-        -- Lista de opções
+        mostrarLogoCentralizada path 
         mapM_ (uncurry exibirOpcao) (zip [0..] opcoes)
-
-        -- Captura tecla
         key <- getKey
         case key of
             "UP"    -> go ((selectedIndex - 1 + n) `mod` n)
@@ -46,7 +40,6 @@ escolherOpcaoComTitulo path opcoes = configsTemporariasTerminal $ go 0
                 then putStrLn $ "-> " ++ texto
                 else putStrLn $ "   " ++ texto
         
-    
 
 data Key = ArrowUp | ArrowDown | Enter | Other deriving (Show, Eq)
 

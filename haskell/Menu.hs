@@ -5,16 +5,15 @@ import Control.Exception
 import Data.Char (isAlphaNum, isDigit, isLower, isUpper)
 import Data.List (isInfixOf)
 import Data.Typeable (Typeable)
-import Utils (centralizar, limparTela, terminalWidth, mostrarLogoCentralizado,limparTelaCompleta)
+import Utils (centralizar, limparTela, limparTelaCompleta, larguraTerminal, mostrarLogoCentralizada, carregarLogo)
 import Inicial (paginaInicial)
 import MapaMissoes (escolherMissao, imprimirMapa)
 import Navegacao (escolherOpcaoComTitulo)
 import System.Directory (doesFileExist)
-import Utils (carregarLogo, centralizar, limparTela, terminalWidth, mostrarLogoCentralizado,limparTelaCompleta)
 
 menuPrincipal :: IO ()
 menuPrincipal = do
-  let largura = terminalWidth
+  let largura = larguraTerminal
   let opcoes = [ "🎮 Iniciar Novo Jogo"
                  , "📰 Ver Regras do Jogo"
                  , "🗺️  Ver Mapa de Missões"
@@ -63,6 +62,6 @@ mostrarRegrasJogo caminho = do
   where
     mostrarLinhas [] = return ()
     mostrarLinhas (l : ls) = do
-      putStrLn $ centralizar terminalWidth l
+      putStrLn $ centralizar larguraTerminal l
       threadDelay 100000
       mostrarLinhas ls

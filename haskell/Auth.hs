@@ -9,7 +9,7 @@ import MapaMissoes (escolherMissao, imprimirMapa)
 import Menu (menuPrincipal)
 import Navegacao (escolherOpcaoComTitulo)
 import System.Directory (doesFileExist)
-import Utils (carregarLogo, centralizar, limparTela, terminalWidth)
+import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
 
 loopAutenticacao :: IO ()
 loopAutenticacao = do
@@ -48,7 +48,7 @@ validarSenha senha
 
 autenticarUsuario :: IO Bool
 autenticarUsuario = do
-  let largura = terminalWidth
+  let largura = larguraTerminal
   putStrLn $ replicate largura '='
   putStrLn $ centralizar largura "🔐 AUTENTICAÇÃO"
   putStrLn $ replicate largura '='
