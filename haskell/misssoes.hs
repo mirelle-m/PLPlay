@@ -1,17 +1,41 @@
+module Missoes
+  ( Pergunta(..)
+  , Nivel(..)
+  , ResultadoQuiz(..)
+  , Personagem(..)
+  , carregaPerguntas
+  , carregaPersonagem
+  , salvarPersonagem
+  , limparTela
+  , exibirPergunta
+  , compara_acertou_errou
+  , salvarRespostaAcertada
+  , stringParaNivel
+  , maxErrosPermitidos
+  , podeContinuar
+  , exibirResumo
+  , iniciarQuiz
+  , executarQuiz
+  , verificarMissaoValida
+  , obterMissoesDisponiveis
+  , atualizarProgressoPersonagem
+  ) where
+
 import System.IO
 import Data.List (isPrefixOf, take, filter)
 import Data.Char (toLower)
+import Text.Read (readMaybe)  
 
 data Pergunta = Pergunta
   { idQuestao :: String
-    , missao :: String
-    , textoPergunta :: String
-    , alternativa_Certa :: String
-    , texto_alternativa_a :: String
-    , texto_alternativa_b :: String
-    , texto_alternativa_c :: String
-    , texto_alternativa_d :: String
-    , texto_alternativa_e :: String
+  , missao :: String
+  , textoPergunta :: String
+  , alternativa_Certa :: String
+  , texto_alternativa_a :: String
+  , texto_alternativa_b :: String
+  , texto_alternativa_c :: String
+  , texto_alternativa_d :: String
+  , texto_alternativa_e :: String
   } deriving (Show)
 
 data Nivel = Facil | Medio | Dificil deriving (Show, Eq)
@@ -22,11 +46,42 @@ data ResultadoQuiz = ResultadoQuiz
   , nivel :: Nivel
   } deriving (Show)
 
+data Personagem = Personagem
+  { nomePersonagem :: String
+  , missaoCompletada :: String
+  } deriving (Show)
+
 carregaPerguntas :: FilePath -> IO [Pergunta]
 carregaPerguntas caminho = do
     conteudo <- readFile caminho
     let linhas = tail (lines conteudo)
     return (map parseLinha linhas)
+
+carregaPersonagem :: FilePath -> IO (Maybe Personagem)
+carregaPersonagem caminho = do
+    existe <- doesFileExist caminho
+    if not existe
+        then return Nothing
+        else do
+            conteudo <- readFile caminho
+            let linhas = lines conteudo
+            if length linhas >= 2
+                then do
+                    let dadosLinha = tail linhas !! 0
+                    let colunas = map removeAspas (splitOn ',' dadosLinha)
+                    if length colunas >= 2
+                        then return $ Just $ Personagem (colunas !! 0) (colunas !! 1)
+                        else return Nothing
+                else return Nothing
+
+doesFileExist :: FilePath -> IO Bool
+doesFileExist _ = return True 
+
+salvarPersonagem :: FilePath -> Personagem -> IO ()
+salvarPersonagem caminho personagem = do
+    let cabecalho = "nome,Missao_completada"
+    let dadosPersonagem = nomePersonagem personagem ++ "," ++ missaoCompletada personagem
+    writeFile caminho (cabecalho ++ "\n" ++ dadosPersonagem ++ "\n")
 
 limparTela :: IO ()
 limparTela = putStr (replicate 50 '\n')
@@ -54,9 +109,9 @@ parseLinha linha =
 splitOn :: Char -> String -> [String]
 splitOn delimiter = foldr f [[]]
   where
-    f c (x:xs)
-      | c == delimiter = []:x:xs
-      | otherwise = (c:x):xs
+    f c (h:t)
+      | c == delimiter = []:h:t
+      | otherwise = (c:h):t
 
 exibirPergunta :: Pergunta -> IO ()
 exibirPergunta p = do
@@ -107,10 +162,8 @@ maxErrosPermitidos Facil = 3
 maxErrosPermitidos Medio = 2
 maxErrosPermitidos Dificil = 1
 
-
 podeContinuar :: Int -> Nivel -> Bool
 podeContinuar numErros nivelEscolhido = numErros < maxErrosPermitidos nivelEscolhido
-
 
 exibirResumo :: ResultadoQuiz -> IO ()
 exibirResumo resultado = do
@@ -153,7 +206,6 @@ exibirResumo resultado = do
     
     putStrLn "\n===================================================================="
 
-
 exibirResumoPerguntas :: Pergunta -> IO ()
 exibirResumoPerguntas p = do
     putStrLn ("ID: " ++ idQuestao p)
@@ -161,15 +213,45 @@ exibirResumoPerguntas p = do
     putStrLn ("Resposta correta: " ++ alternativa_Certa p)
     putStrLn "---"
 
-iniciarQuiz :: [Pergunta] -> Nivel -> IO ()
-iniciarQuiz perguntas nivelEscolhido = do
+verificarMissaoValida :: String -> String -> Bool
+verificarMissaoValida missaoEscolhida missaoCompletadaAtual =
+    let missaoLimpa = filter (/= ' ') missaoEscolhida  
+    in case (readMaybe missaoLimpa :: Maybe Int, readMaybe missaoCompletadaAtual :: Maybe Int) of
+        (Just escolhida, Just completada) -> escolhida >= 1 && escolhida <= completada
+        _ -> False
+
+obterMissoesDisponiveis :: String -> [String]
+obterMissoesDisponiveis missaoCompletada =
+    case readMaybe missaoCompletada :: Maybe Int of
+        Just missaoCompletadaNum -> map show [1..missaoCompletadaNum]
+        Nothing -> ["1"]
+
+atualizarProgressoPersonagem :: String -> String -> String
+atualizarProgressoPersonagem missaoAtual missaoCompletada =
+    case (readMaybe missaoAtual :: Maybe Int, readMaybe missaoCompletada :: Maybe Int) of
+        (Just missaoAtualNum, Just missaoCompletadaNum) ->
+            let proximaMissao = missaoAtualNum + 1
+            in if missaoAtualNum == missaoCompletadaNum
+               then show proximaMissao
+               else missaoCompletada
+        _ -> missaoCompletada
+
+iniciarQuiz :: [Pergunta] -> Nivel -> String -> IO String
+iniciarQuiz perguntas nivelEscolhido missaoAtual = do
+    putStrLn "Iniciando o quiz..."
     resultado <- executarQuiz perguntas (ResultadoQuiz [] [] nivelEscolhido)
     exibirResumo resultado
-
+    
+    let numErros = length (erros resultado)
+    let nivelAtual = nivel resultado
+    
+    if numErros < maxErrosPermitidos nivelAtual && not (null perguntas)
+        then return missaoAtual  
+        else return "-1"  
 
 executarQuiz :: [Pergunta] -> ResultadoQuiz -> IO ResultadoQuiz
 executarQuiz [] resultado = return resultado
-executarQuiz (p:ps) resultado = do
+executarQuiz (h:t) resultado = do
     let numErros = length (erros resultado)
     
     if not (podeContinuar numErros (nivel resultado))
@@ -182,63 +264,24 @@ executarQuiz (p:ps) resultado = do
             limparTela
             putStrLn ("Acertos: " ++ show (length (acertos resultado)) ++ " | Erros: " ++ show numErros ++ "/" ++ show (maxErrosPermitidos (nivel resultado)))
             putStrLn ""
-            exibirPergunta p
+            exibirPergunta h
             
             putStr "Escolha uma alternativa: "
             alternativa_usuario <- getLine
             
-            let comparacao = compara_acertou_errou alternativa_usuario (alternativa_Certa p)
+            let comparacao = compara_acertou_errou alternativa_usuario (alternativa_Certa h)
             
             if comparacao
                 then do
                     putStrLn "ACERTOU!"
-                    salvarRespostaAcertada p
-                    let novoResultado = resultado { acertos = p : acertos resultado }
-
-                    executarQuiz ps novoResultado
+                    salvarRespostaAcertada h
+                    let novoResultado = resultado { acertos = h : acertos resultado }
+                    putStrLn "Pressione ENTER para continuar..."
+                    _ <- getLine
+                    executarQuiz t novoResultado
                 else do
-                    putStrLn ("ERROU! A resposta correta era: " ++ alternativa_Certa p)
-                    let novoResultado = resultado { erros = p : erros resultado }
-
-                    executarQuiz ps novoResultado
-
-main :: IO ()
-main = do
-  putStrLn "Bem vindo!"
-  
-  putStrLn "Escolha o nivel de dificuldade:"
-  putStrLn "1 - Facil (pode errar ate 3 questoes)"
-  putStrLn "2 - Medio (pode errar ate 2 questoes)" 
-  putStrLn "3 - Dificil (pode errar ate 1 questao)"
-  putStr "Sua escolha: "
-  nivelInput <- getLine
-  
-  case stringParaNivel nivelInput of
-    Nothing -> do
-      putStrLn "Nivel invalido! Usando nivel Medio por padrao."
-      main
-    Just nivelEscolhido -> do
-      putStrLn ("Nivel escolhido: " ++ show nivelEscolhido)
-      
-      putStrLn "Qual missao voce quer exibir?"
-      missaoDesejada <- getLine
-      
-      putStrLn ("Quantas perguntas da missao '" ++ missaoDesejada ++ "' voce quer exibir?")
-      numInput <- getLine
-      
-      let numPerguntas = read numInput :: Int
-      
-      todasAsPerguntas <- carregaPerguntas "quiz_completo.csv"
-      
-      let perguntasDaMissao = filter (\p -> missao p == missaoDesejada) todasAsPerguntas
-      
-      let perguntasParaExibir = take numPerguntas perguntasDaMissao
-      
-      if null perguntasParaExibir
-        then putStrLn "Nenhuma pergunta encontrada para esta missao ou quantidade."
-        else do
-          putStrLn ("\n--- INICIANDO QUIZ COM " ++ show (length perguntasParaExibir) ++ " PERGUNTAS DA MISSAO '" ++ missaoDesejada ++ "' ---")
-          putStrLn ("Nivel: " ++ show nivelEscolhido ++ " (maximo " ++ show (maxErrosPermitidos nivelEscolhido) ++ " erros)")
-          putStrLn "Pressione Enter para comecar..."
-          _ <- getLine
-          iniciarQuiz perguntasParaExibir nivelEscolhido
+                    putStrLn ("ERROU! A resposta correta era: " ++ alternativa_Certa h)
+                    let novoResultado = resultado { erros = h : erros resultado }
+                    putStrLn "Pressione ENTER para continuar..."
+                    _ <- getLine
+                    executarQuiz t novoResultado
