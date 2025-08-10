@@ -20,7 +20,7 @@ menuJogo = do
   case opcaoMenu of
     0 -> continuarJogo
     1 -> novoJogo
-    2 -> putStrLn ""
+    2 -> return()
     _ -> do
       putStrLn "Opcao invalida! Tentando continuar jogo existente..."
       continuarJogo
