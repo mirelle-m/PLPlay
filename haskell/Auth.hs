@@ -10,6 +10,7 @@ import Menu (menuPrincipal)
 import Navegacao (escolherOpcaoComTitulo)
 import System.Directory (doesFileExist)
 import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
+import Usuario
 
 loopAutenticacao :: IO ()
 loopAutenticacao = do
@@ -62,21 +63,23 @@ autenticarUsuario = do
       case validarSenha senha of
         Left err -> throwIO (SenhaInvalida err)
         Right () -> do
-          let userData = "username: " ++ username ++ "\nprogresso: Missao3 csharp\n"
-          exists <- doesFileExist "user.txt"
+          let usuarioNovo = Usuario username senha "1"
+          exists <- doesFileExist "personagem.csv"
           if exists
             then do
-              content <- readFile "user.txt"
-              if ("username: " ++ username) `isInfixOf` content
-                then do
-                  putStrLn "✅ Autenticado com sucesso!"
-                  return True
-                else do
-                  putStrLn "Usuário não encontrado. Cadastrando novo usuário..."
-                  appendFile "user.txt" userData
+              usuario <- carregaUsuario username
+              case usuario of
+                Nothing -> do
+                  salvarUsuario usuarioNovo
                   putStrLn "✅ Cadastro realizado com sucesso!"
                   return True
-            else do
-              writeFile "user.txt" userData
-              putStrLn "Primeiro usuário cadastrado com sucesso!"
+                Just u -> do
+                  if senha == (senhaUsuario u) then do
+                    putStrLn "✅ Autenticado com sucesso!"
+                    return True
+                  else do 
+                    putStrLn "❌ Senha incorreta! Tente Novamente!"
+                    return True
+          else do
+              putStrLn "Ops! Algo deu errado! Tente novamente!"
               return True

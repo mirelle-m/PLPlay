@@ -5,6 +5,14 @@ import Data.List (isPrefixOf, take, filter)
 import Data.Char (toLower)
 import Text.Read (readMaybe)  
 import Utils (larguraTerminal, limparTela )
+import Usuario
+
+
+data Personagem = Personagem
+  { nomePersonagem :: String
+--   , senhaUsuario :: String
+  , missaoCompletada :: String
+  } deriving (Show)
 
 data Pergunta = Pergunta
   { idQuestao :: String
@@ -24,11 +32,6 @@ data ResultadoQuiz = ResultadoQuiz
   { acertos :: [Pergunta]
   , erros :: [Pergunta]
   , nivel :: Nivel
-  } deriving (Show)
-
-data Personagem = Personagem
-  { nomePersonagem :: String
-  , missaoCompletada :: String
   } deriving (Show)
 
 carregaPerguntas :: FilePath -> IO [Pergunta]
@@ -63,10 +66,10 @@ salvarPersonagem caminho personagem = do
     let dadosPersonagem = nomePersonagem personagem ++ "," ++ missaoCompletada personagem
     writeFile caminho (cabecalho ++ "\n" ++ dadosPersonagem ++ "\n")
 
-removeAspas :: String -> String
-removeAspas str
-  | length str >= 2 && head str == '"' && last str == '"' = init (tail str)
-  | otherwise = str
+-- removeAspas :: String -> String
+-- removeAspas str
+--   | length str >= 2 && head str == '"' && last str == '"' = init (tail str)
+--   | otherwise = str
 
 parseLinha :: String -> Pergunta
 parseLinha linha =
@@ -83,12 +86,12 @@ parseLinha linha =
     , texto_alternativa_e = colunas !! 8
     }
 
-splitOn :: Char -> String -> [String]
-splitOn delimiter = foldr f [[]]
-  where
-    f c (h:t)
-      | c == delimiter = []:h:t
-      | otherwise = (c:h):t
+-- splitOn :: Char -> String -> [String]
+-- splitOn delimiter = foldr f [[]]
+--   where
+--     f c (h:t)
+--       | c == delimiter = []:h:t
+--       | otherwise = (c:h):t
 
 exibirPergunta :: Pergunta -> IO ()
 exibirPergunta p = do
@@ -97,11 +100,11 @@ exibirPergunta p = do
     putStrLn ("Missao: " ++ missao p)
     putStrLn ("Pergunta: ")
     putStrLn (textoPergunta p)
-    putStrLn ("a: " ++ texto_alternativa_a p)
-    putStrLn ("b: " ++ texto_alternativa_b p)
-    putStrLn ("c: " ++ texto_alternativa_c p)
-    putStrLn ("d: " ++ texto_alternativa_d p)
-    putStrLn ("e: " ++ texto_alternativa_e p)
+    putStrLn ("a) " ++ texto_alternativa_a p)
+    putStrLn ("b) " ++ texto_alternativa_b p)
+    putStrLn ("c) " ++ texto_alternativa_c p)
+    putStrLn ("d) " ++ texto_alternativa_d p)
+    putStrLn ("e) " ++ texto_alternativa_e p)
     putStrLn $ replicate larguraTerminal '-'
 
 
@@ -155,21 +158,21 @@ exibirResumo resultado = do
             putStrLn $ replicate larguraTerminal '-'
             putStrLn "            GAME OVER!            "
             putStrLn $ replicate larguraTerminal '-'
-            putStrLn ("Voce excedeu o limite de erros para o nivel " ++ show nivelAtual)
+            putStrLn ("Você excedeu o limite de erros para o nível " ++ show nivelAtual)
             putStrLn ("Limite de erros: " ++ show (maxErrosPermitidos nivelAtual))
         else do
             putStrLn $ replicate larguraTerminal '-'
-            putStrLn "        MISSAO CONCLUIDA!         "
+            putStrLn "        MISSÃO CONCLUIDA!         "
             putStrLn $ replicate larguraTerminal '-'
     
-    putStrLn ("Nivel escolhido: " ++ show (nivel resultado))
+    putStrLn ("Nível escolhido: " ++ show (nivel resultado))
     putStrLn ("Total de acertos: " ++ show (length (acertos resultado)))
     putStrLn ("Total de erros: " ++ show (length (erros resultado)))
     putStrLn ""
     
     if not (null (acertos resultado))
         then do
-            putStrLn "PERGUNTAS QUE VOCE ACERTOU:"
+            putStrLn "PERGUNTAS QUE VOCÊ ACERTOU:"
             putStrLn $ replicate larguraTerminal '-'
             mapM_ exibirResumoPerguntas (reverse (acertos resultado))
             putStrLn ""
@@ -251,14 +254,14 @@ executarQuiz (h:t) resultado = do
             
             if comparacao
                 then do
-                    putStrLn "ACERTOU!"
+                    putStrLn "Parabéns! Você acertou!!!"
                     salvarRespostaAcertada h
                     let novoResultado = resultado { acertos = h : acertos resultado }
                     putStrLn "Pressione ENTER para continuar..."
                     _ <- getLine
                     executarQuiz t novoResultado
                 else do
-                    putStrLn ("ERROU! A resposta correta era: " ++ alternativa_Certa h)
+                    putStrLn ("Ops... não foi dessa vez! A resposta correta era: " ++ alternativa_Certa h)
                     let novoResultado = resultado { erros = h : erros resultado }
                     putStrLn "Pressione ENTER para continuar..."
                     _ <- getLine
