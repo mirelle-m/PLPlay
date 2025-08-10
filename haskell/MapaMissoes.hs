@@ -26,6 +26,18 @@ missoesMapeadas =
       ])
   ]
 
+missoesMapeadasNomes :: [String]
+missoesMapeadasNomes = ["🧭 Missão 1: Introdução - Históricos e Características"
+      ,"🧭 Missão 2: Classificação e Características"
+      ,"🧭 Missão 3: Valores, Tipos e Sistema de Tipos"
+      ,"🧭 Missão 4: Paradigma Imperativo"
+      ,"🧭 Missão 5: Paradigma Funcional"
+      ,"🧭 Missão 6: Paradigma Lógico"]
+
+chefoesMapeadas:: [String]
+chefoesMapeadas = ["👾 Chefão 1: Batalha dos Fundamentos"
+      ,"👾 Chefão 2: Guardião da Recursão"
+      ,"👾 Chefão 3: Mestre da Dedução"]
 
 gerarLinhasMapa :: [(String, [String])] -> [String]
 gerarLinhasMapa = concatMap gerarLinhasEstagio
@@ -68,3 +80,32 @@ formatarMissao :: String -> String
 formatarMissao m =
   let emoji = if "Chefão" `elem` words m then "👾 " else "🧭 "
   in emoji ++ m
+
+
+escolherMissaoComRestricao :: String -> IO String
+escolherMissaoComRestricao maxDesbloqueada = do
+    let maxNum = read maxDesbloqueada :: Int
+    let nomesEstagios = map fst missoesMapeadas
+    let estagios = map ("📍 " ++) nomesEstagios
+
+    idxEstagio <- escolherOpcaoComTitulo "../banners/escolha_estagio.txt" estagios
+    let (nomeEstagio, missoes) = missoesMapeadas !! idxEstagio
+
+    let missoesLiberadas =
+            take maxNum missoes -- só mostra até a missão desbloqueada
+
+    idxMissao <- escolherOpcaoComTitulo (bannerDoEstagio nomeEstagio) (map formatarMissao missoesLiberadas)
+    return (extrairNumero (missoesLiberadas !! idxMissao))
+
+bannerDoEstagio :: String -> FilePath
+bannerDoEstagio "Primeiro Estágio" = "../banners/primeiro_estagio.txt"
+bannerDoEstagio "Segundo Estágio"  = "../banners/segundo_estagio.txt"
+bannerDoEstagio "Terceiro Estágio" = "../banners/terceiro_estagio.txt"
+bannerDoEstagio _                  = "../banners/default.txt"
+
+extrairNumero :: String -> String
+extrairNumero m =
+    case words m of
+        ("Missão":n:_) -> filter (`elem` ['0'..'9']) n
+        ("Chefão":n:_) -> filter (`elem` ['0'..'9']) n
+        _              -> ""

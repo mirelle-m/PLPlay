@@ -1,1 +1,4 @@
 id_questao,,pergunta,texto_alternativa_certa
+M1_Q01,1,De acordo com o material qual e o nome completo do professor responsavel pela disciplina?,b,Everton L. G. Ribeiro.,Everton L. G. Alves.,Everton G. Alves.,Everton L. Alves.,Everton de G. Alves.
+M1_Q02,1,Em que universidade o professor Everton L. G. Alves obteve sua graduacao mestrado e doutorado?,c,Universidade de Sao Paulo (USP).,University of Texas in Austin.,Universidade Federal de Campina Grande (UFCG).,Universidade Estadual da Paraiba (UEPB).,Massachusetts Institute of Technology (MIT).
+M1_Q03,1,Segundo a definicao apresentada no material o que e um ""paradigma""?,d,Uma tecnica de programacao avancada.,Um tipo de linguagem de programacao.,Um metodo de avaliacao de software.,Um modelo ou padrao a ser seguido.,Um conjunto de regras gramaticais de uma linguagem.

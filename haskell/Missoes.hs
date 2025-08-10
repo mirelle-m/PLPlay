@@ -1,30 +1,10 @@
-module Missoes
-  ( Pergunta(..)
-  , Nivel(..)
-  , ResultadoQuiz(..)
-  , Personagem(..)
-  , carregaPerguntas
-  , carregaPersonagem
-  , salvarPersonagem
-  , limparTela
-  , exibirPergunta
-  , compara_acertou_errou
-  , salvarRespostaAcertada
-  , stringParaNivel
-  , maxErrosPermitidos
-  , podeContinuar
-  , exibirResumo
-  , iniciarQuiz
-  , executarQuiz
-  , verificarMissaoValida
-  , obterMissoesDisponiveis
-  , atualizarProgressoPersonagem
-  ) where
+module Missoes where
 
 import System.IO
 import Data.List (isPrefixOf, take, filter)
 import Data.Char (toLower)
 import Text.Read (readMaybe)  
+import Utils (larguraTerminal, limparTela )
 
 data Pergunta = Pergunta
   { idQuestao :: String
@@ -83,9 +63,6 @@ salvarPersonagem caminho personagem = do
     let dadosPersonagem = nomePersonagem personagem ++ "," ++ missaoCompletada personagem
     writeFile caminho (cabecalho ++ "\n" ++ dadosPersonagem ++ "\n")
 
-limparTela :: IO ()
-limparTela = putStr (replicate 50 '\n')
-
 removeAspas :: String -> String
 removeAspas str
   | length str >= 2 && head str == '"' && last str == '"' = init (tail str)
@@ -115,7 +92,7 @@ splitOn delimiter = foldr f [[]]
 
 exibirPergunta :: Pergunta -> IO ()
 exibirPergunta p = do
-    putStrLn "----------------------------Escolha uma alternativa----------------------------"
+    putStrLn $ replicate larguraTerminal '-'
     putStrLn ("ID: " ++ idQuestao p)
     putStrLn ("Missao: " ++ missao p)
     putStrLn ("Pergunta: ")
@@ -125,7 +102,8 @@ exibirPergunta p = do
     putStrLn ("c: " ++ texto_alternativa_c p)
     putStrLn ("d: " ++ texto_alternativa_d p)
     putStrLn ("e: " ++ texto_alternativa_e p)
-    putStrLn "----------------------------Escolha uma alternativa----------------------------"
+    putStrLn $ replicate larguraTerminal '-'
+
 
 normalizaResposta :: String -> String
 normalizaResposta = map toLower . filter (/= ' ')
@@ -174,15 +152,15 @@ exibirResumo resultado = do
     
     if numErros >= maxErrosPermitidos nivelAtual
         then do
-            putStrLn "===================================================================="
+            putStrLn $ replicate larguraTerminal '-'
             putStrLn "            GAME OVER!            "
-            putStrLn "===================================================================="
+            putStrLn $ replicate larguraTerminal '-'
             putStrLn ("Voce excedeu o limite de erros para o nivel " ++ show nivelAtual)
             putStrLn ("Limite de erros: " ++ show (maxErrosPermitidos nivelAtual))
         else do
-            putStrLn "===================================================================="
+            putStrLn $ replicate larguraTerminal '-'
             putStrLn "        MISSAO CONCLUIDA!         "
-            putStrLn "===================================================================="
+            putStrLn $ replicate larguraTerminal '-'
     
     putStrLn ("Nivel escolhido: " ++ show (nivel resultado))
     putStrLn ("Total de acertos: " ++ show (length (acertos resultado)))
@@ -192,7 +170,7 @@ exibirResumo resultado = do
     if not (null (acertos resultado))
         then do
             putStrLn "PERGUNTAS QUE VOCE ACERTOU:"
-            putStrLn "----------------------------"
+            putStrLn $ replicate larguraTerminal '-'
             mapM_ exibirResumoPerguntas (reverse (acertos resultado))
             putStrLn ""
         else putStrLn "Nenhuma pergunta foi acertada.\n"
@@ -200,12 +178,10 @@ exibirResumo resultado = do
     if not (null (erros resultado))
         then do
             putStrLn "PERGUNTAS QUE VOCE ERROU:"
-            putStrLn "-------------------------"
+            putStrLn $ replicate larguraTerminal '-'
             mapM_ exibirResumoPerguntas (reverse (erros resultado))
         else putStrLn "Parabens! Voce nao errou nenhuma pergunta!"
     
-    putStrLn "\n===================================================================="
-
 exibirResumoPerguntas :: Pergunta -> IO ()
 exibirResumoPerguntas p = do
     putStrLn ("ID: " ++ idQuestao p)
@@ -220,11 +196,12 @@ verificarMissaoValida missaoEscolhida missaoCompletadaAtual =
         (Just escolhida, Just completada) -> escolhida >= 1 && escolhida <= completada
         _ -> False
 
-obterMissoesDisponiveis :: String -> [String]
+
+obterMissoesDisponiveis :: String -> [Int]
 obterMissoesDisponiveis missaoCompletada =
     case readMaybe missaoCompletada :: Maybe Int of
-        Just missaoCompletadaNum -> map show [1..missaoCompletadaNum]
-        Nothing -> ["1"]
+        Just missaoCompletadaNum -> [1 .. missaoCompletadaNum]
+        Nothing                  -> [1]
 
 atualizarProgressoPersonagem :: String -> String -> String
 atualizarProgressoPersonagem missaoAtual missaoCompletada =
@@ -240,6 +217,7 @@ iniciarQuiz :: [Pergunta] -> Nivel -> String -> IO String
 iniciarQuiz perguntas nivelEscolhido missaoAtual = do
     putStrLn "Iniciando o quiz..."
     resultado <- executarQuiz perguntas (ResultadoQuiz [] [] nivelEscolhido)
+    
     exibirResumo resultado
     
     let numErros = length (erros resultado)

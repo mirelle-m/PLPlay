@@ -9,12 +9,13 @@ import Utils (centralizar, limparTela, limparTelaCompleta, larguraTerminal, most
 import Inicial (paginaInicial)
 import MapaMissoes (escolherMissao, imprimirMapa)
 import Navegacao (escolherOpcaoComTitulo)
+import Jogo (menuJogo)
 import System.Directory (doesFileExist)
 
 menuPrincipal :: IO ()
 menuPrincipal = do
     let largura = larguraTerminal
-    let opcoes = [ "🎮 Iniciar Novo Jogo"
+    let opcoes = [ "🎮 Jogar"
                  , "📰 Ver Regras do Jogo"
                  , "🗺️  Ver Mapa de Missões"
                  , "🎯 Modo Treino"
@@ -27,8 +28,7 @@ menuPrincipal = do
     case escolha of
         0 -> do
             putStrLn "Iniciando novo jogo..."
-            missao <- escolherMissao
-            putStrLn $ "\n🚀 Você selecionou: " ++ missao
+            menuJogo
             menuPrincipal
         1 -> do
             limparTelaCompleta

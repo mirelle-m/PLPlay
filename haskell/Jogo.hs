@@ -1,22 +1,26 @@
+module Jogo where
 import Missoes
 import Data.List (filter, take)
 import Data.Maybe (fromMaybe, isNothing)
 import System.CPUTime (getCPUTime)
 import Text.Read (readMaybe)  
+import Navegacao(escolherOpcao,escolherOpcaoComTitulo)
+import MapaMissoes
 
-main :: IO ()
-main = do
-  putStrLn "Bem vindo!"
-  putStrLn ""
-  putStrLn "=== MENU PRINCIPAL ==="
-  putStrLn "1 - Continuar jogo existente"
-  putStrLn "2 - Comecar novo jogo"
-  putStr "Sua escolha: "
-  opcaoMenu <- getLine
+menuJogo :: IO ()
+menuJogo = do
+
+  let opcoes = [ "💾 Continuar Jogo"
+                ,"🎮 Iniciar Novo Jogo"
+                 ,"🚪 Voltar"
+                 ]
+
+  opcaoMenu <- escolherOpcaoComTitulo "../banners/menu_principal.txt" opcoes
   
   case opcaoMenu of
-    "1" -> continuarJogo
-    "2" -> novoJogo
+    0 -> continuarJogo
+    1 -> novoJogo
+    2 -> putStrLn ""
     _ -> do
       putStrLn "Opcao invalida! Tentando continuar jogo existente..."
       continuarJogo
@@ -48,76 +52,40 @@ iniciarQuizLoop :: Personagem -> IO ()
 iniciarQuizLoop personagemAtual = do
   putStrLn ""
   putStrLn "Escolha o nivel de dificuldade:"
-  putStrLn "1 - Facil (pode errar ate 3 questoes)"
-  putStrLn "2 - Medio (pode errar ate 2 questoes)" 
-  putStrLn "3 - Dificil (pode errar ate 1 questao)"
   putStr "Sua escolha: "
-  nivelInput <- getLine
-  
-  case stringParaNivel nivelInput of
-    Nothing -> do
-      putStrLn "Nivel invalido! Usando nivel Medio por padrao."
-      iniciarQuizLoop personagemAtual
-    Just nivelEscolhido -> do
-      putStrLn ("Nivel escolhido: " ++ show nivelEscolhido)
-      
-      
-      escolherMissao personagemAtual nivelEscolhido
 
-escolherMissao :: Personagem -> Nivel -> IO ()
-escolherMissao personagemAtual nivelEscolhido = do
-  let missoesDisponiveis = obterMissoesDisponiveis (missaoCompletada personagemAtual)
-  putStrLn ""
-  putStrLn "========================================="
-  putStrLn "           ESCOLHA DA MISSAO"
-  putStrLn "========================================="
-  putStrLn "Missoes que voce pode jogar:"
-  mapM_ (\m -> putStrLn ("  -> Missao " ++ m)) missoesDisponiveis
-  putStrLn ""
-  putStrLn "INSTRUCOES:"
-  putStrLn "- Digite APENAS o numero da missao"
-  putStrLn "- Exemplos validos: 1, 2, 3, etc."
-  putStrLn "- Nao digite 'Missao 1' ou outros textos"
-  putStrLn ""
-  putStr "Digite o numero da missao desejada: "
+  let opcoes = [ "😊 Facil (pode errar ate 3 questoes)"
+              ,"😉 Medio (pode errar ate 2 questoes)"
+                ,"🤯 Dificil (pode errar ate 1 questao)"
+                ]
   
-  missaoInput <- getLine
-  let missaoLimpa = filter (/= ' ') missaoInput  
-  
-  putStrLn ("Processando missao: " ++ missaoLimpa)
-  
-  case readMaybe missaoLimpa :: Maybe Int of
-    Nothing -> do
-      putStrLn ""
-      putStrLn "ERRO: Por favor digite apenas um NUMERO!"
-      putStrLn "Exemplo: se quer jogar a missao 1, digite: 1"
-      putStrLn ""
-      putStr "Pressione Enter para tentar novamente..."
-      _ <- getLine
-      escolherMissao personagemAtual nivelEscolhido
+  indice <- escolherOpcao "Escolha o nivel de dificuldade:" opcoes
+  let nivelEscolhido = case indice of
+          0 -> Facil
+          1 -> Medio
+          2 -> Dificil
+          _ -> Medio
       
-    Just numeroMissao -> do
-      case readMaybe (missaoCompletada personagemAtual) :: Maybe Int of
-        Nothing -> do
-          putStrLn "ERRO: Problema com dados do personagem!"
-          menuContinuar personagemAtual
-        Just maxMissao -> do
-          if numeroMissao < 1 then do
-            putStrLn ""
-            putStrLn "ERRO: O numero da missao deve ser maior que 0!"
-            putStr "Pressione Enter para tentar novamente..."
-            _ <- getLine
-            escolherMissao personagemAtual nivelEscolhido
-          else if numeroMissao > maxMissao then do
-            putStrLn ""
-            putStrLn ("ERRO: Voce so pode jogar missoes de 1 ate " ++ show maxMissao)
-            putStrLn ("Voce escolheu a missao " ++ show numeroMissao ++ " que ainda nao esta disponivel!")
-            putStr "Pressione Enter para tentar novamente..."
-            _ <- getLine
-            escolherMissao personagemAtual nivelEscolhido
-          else do
-            
-            executarMissao personagemAtual nivelEscolhido (show numeroMissao)
+  escolherMissaoMenu personagemAtual nivelEscolhido
+
+filtrarPorIndices :: [Int] -> [a] -> [a]
+filtrarPorIndices indices lista =
+    [ lista !! (i - 1) | i <- indices, i > 0, i <= length lista ]
+
+escolherMissaoMenu :: Personagem -> Nivel -> IO ()
+escolherMissaoMenu personagemAtual nivelEscolhido = do
+    let missoesDisponiveis = obterMissoesDisponiveis (missaoCompletada personagemAtual)
+
+    let opcoes = filtrarPorIndices missoesDisponiveis missoesMapeadasNomes
+    -- Seleção por setas
+    indiceMissao <- escolherOpcao "MISSÕES QUE VOCÊ PODE JOGAR BASEADO NO SEU NIVEL ATUAL:\n" opcoes
+
+    let missaoEscolhida = indiceMissao + 1 -- índice começa em 0, missões começam em 1
+
+    putStrLn ("\n\nProcessando missão: " ++ show missaoEscolhida)
+
+    -- Chama a função que executa a missão
+    executarMissao personagemAtual nivelEscolhido (show missaoEscolhida)
 
 executarMissao :: Personagem -> Nivel -> String -> IO ()
 executarMissao personagemAtual nivelEscolhido missaoDesejada = do
@@ -125,19 +93,17 @@ executarMissao personagemAtual nivelEscolhido missaoDesejada = do
   
   let perguntasDaMissao = filter (\p -> missao p == missaoDesejada) todasAsPerguntas
   
-  
   let perguntasParaExibir = take 10 perguntasDaMissao
   
   if null perguntasParaExibir
     then do
-      putStrLn ("Nenhuma pergunta encontrada para a missao " ++ missaoDesejada ++ ".")
-      putStrLn "Verifique se o arquivo quiz_completo.csv esta correto."
-      menuContinuar personagemAtual
+      putStrLn ("Nenhuma pergunta encontrada para a missao " ++ missaoDesejada ++ ".") 
+      menuContinuar "Verifique se o arquivo quiz_completo.csv esta correto." personagemAtual
     else do
       let numPerguntas = length perguntasParaExibir
       putStrLn ("\n--- INICIANDO QUIZ DA MISSAO " ++ missaoDesejada ++ " ---")
       putStrLn (show numPerguntas ++ " perguntas selecionadas em ordem sequencial")
-      putStr "Pressione Enter para comecar o quiz..."
+      putStrLn "Pressione Enter para comecar o quiz..."
       putStrLn ("Nivel: " ++ show nivelEscolhido ++ " (maximo " ++ show (maxErrosPermitidos nivelEscolhido) ++ " erros)")
       putStrLn ""
       
@@ -150,29 +116,26 @@ executarMissao personagemAtual nivelEscolhido missaoDesejada = do
           let novaMissaoCompletada = atualizarProgressoPersonagem missaoDesejada (missaoCompletada personagemAtual)
           let personagemAtualizado = personagemAtual { missaoCompletada = novaMissaoCompletada }
           salvarPersonagem "personagem.csv" personagemAtualizado
-          putStrLn ("\nParabens! Voce desbloqueou a missao " ++ novaMissaoCompletada ++ "!")
-          menuContinuar personagemAtualizado
+          menuContinuar ("\nParabens 🥳! Voce desbloqueou a missao " ++ novaMissaoCompletada ++ "🎉!\n") personagemAtualizado
         else if resultadoMissao == "-1"
           then do
-            putStrLn "\nVoce falhou na missao. Tente novamente!"
-            menuContinuar personagemAtual
+            _ <- getLine
+            menuContinuar "\nVoce falhou na missao 😢. Tente novamente!\n" personagemAtual
           else do
-            putStrLn "\nMissao repetida concluida!"
-            menuContinuar personagemAtual
+            menuContinuar "\nMissao repetida concluida! 🎈\n" personagemAtual
 
-menuContinuar :: Personagem -> IO ()
-menuContinuar personagem = do
-  putStrLn "\n=== O QUE DESEJA FAZER? ==="
-  putStrLn "1 - Continuar jogando"
-  putStrLn "2 - Voltar ao menu principal"
-  putStrLn "3 - Sair do jogo"
-  putStr "Sua escolha: "
-  opcao <- getLine
-  
-  case opcao of
-    "1" -> iniciarQuizLoop personagem
-    "2" -> main
-    "3" -> putStrLn "Obrigado por jogar!"
-    _ -> do
-      putStrLn "Opcao invalida!"
-      menuContinuar personagem
+menuContinuar :: String -> Personagem -> IO ()
+menuContinuar titulo personagem = do
+    let opcoes =
+            [ "🎮 Continuar jogando"
+            , "🏠 Voltar ao menu principal"
+            , "🚪 Sair"
+            ]
+
+    escolha <- escolherOpcao (titulo ++ "======== O QUE DESEJA FAZER? ========") opcoes
+
+    case escolha of
+        0 -> iniciarQuizLoop personagem
+        1 -> menuJogo
+        2 -> putStrLn "Obrigado por jogar!"
+        _ -> menuContinuar "" personagem 

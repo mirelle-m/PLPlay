@@ -1,4 +1,4 @@
-module Navegacao (escolherOpcaoComTitulo) where
+module Navegacao (escolherOpcaoComTitulo,escolherOpcao) where
 
 import System.IO
 import Data.Char (ord)
@@ -39,7 +39,33 @@ escolherOpcaoComTitulo path opcoes = configsTemporariasTerminal $ go 0
             if index == selectedIndex
                 then putStrLn $ "-> " ++ texto
                 else putStrLn $ "   " ++ texto
+
+
+escolherOpcao :: String -> [String] -> IO Int
+escolherOpcao titulo opcoes = configsTemporariasTerminal $ go 0
+  where
+    n = length opcoes
+    largura = larguraTerminal
+
+    go selectedIndex = do
+        limparTelaCompleta
         
+        putStrLn titulo
+
+        mapM_ (uncurry exibirOpcao) (zip [0..] opcoes)
+        key <- getKey
+        case key of
+            "UP"    -> go ((selectedIndex - 1 + n) `mod` n)
+            "DOWN"  -> go ((selectedIndex + 1) `mod` n)
+            "ENTER" -> return selectedIndex
+            _       -> go selectedIndex
+        where
+        exibirOpcao :: Int -> String -> IO ()
+        exibirOpcao index texto =
+            if index == selectedIndex
+                then putStrLn $ "-> " ++ texto
+                else putStrLn $ "   " ++ texto
+
 
 data Key = ArrowUp | ArrowDown | Enter | Other deriving (Show, Eq)
 

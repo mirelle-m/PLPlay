@@ -12,3 +12,11 @@ username: pepep
 progresso: Missao3 csharp
 username: liviaaaa
 progresso: Missao3 csharp
+username: Tarcisio
+progresso: Missao3 csharp
+username: tarcisio
+progresso: Missao3 csharp
+username: tarciso
+progresso: Missao3 csharp
+username: tataco
+progresso: Missao3 csharp
