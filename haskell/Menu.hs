@@ -14,55 +14,51 @@ import Flashcard (iniciarTreino)
 
 menuPrincipal :: IO ()
 menuPrincipal = do
-  let largura = larguraTerminal
-  let opcoes = [ "🎮 Iniciar Novo Jogo"
+    let largura = larguraTerminal
+    let opcoes = [ "🎮 Iniciar Novo Jogo"
                  , "📰 Ver Regras do Jogo"
                  , "🗺️  Ver Mapa de Missões"
                  , "🎯 Modo Treino"
                  , "💾 Continuar Jogo"
                  , "🚪 Sair"
                  ]
-  escolha <- escolherOpcaoComTitulo "../banners/menu_principal.txt" opcoes
-  limparTelaCompleta
-  case escolha of
-    0 -> do
-      putStrLn "Iniciando Novo Jogo..."
-      missao <- escolherMissao
-      putStrLn $ "\n Você selecionou: " ++ missao
-      menuPrincipal
-    1 -> do
-      putStrLn "Mostrando Regras do Jogo..."
-      mostrarRegrasJogo "../banners/regras.txt"
-      putStrLn "\nPressione Enter para voltar ao menu..."
-      _ <- getLine
-      menuPrincipal
-    2 -> do
-      putStrLn "Mostrando Mapa de Missões"
-      mostrarRegrasJogo "../banners/mapa.txt"
-      putStrLn "\nPressione Enter para voltar ao menu..."
-      _ <- getLine
-      menuPrincipal
-    3 -> do
-      putStrLn "Modo Treino"
-      iniciarTreino []
-      menuPrincipal
-    4 -> do
-      putStrLn "Continuando jogo"
-      missao <- escolherMissao
-      putStrLn $ "\nVocê selecionou: " ++ missao
-      menuPrincipal
-    5 -> do
-      putStrLn "Saindo do jogo... Até a próxima!"
-    _ -> putStrLn "Opção inválida." >> menuPrincipal
+                          
+    escolha <- escolherOpcaoComTitulo "../banners/menu_principal.txt" opcoes
+    limparTelaCompleta
+    case escolha of
+        0 -> do
+            putStrLn "Iniciando novo jogo..."
+            missao <- escolherMissao
+            putStrLn $ "\n🚀 Você selecionou: " ++ missao
+            menuPrincipal
+        1 -> do
+            limparTelaCompleta
+            mostrarRegrasJogo
+
+            putStrLn "\nPressione Enter para voltar ao menu..."
+            _ <- getLine
+            menuPrincipal
+        2 -> do
+            limparTelaCompleta
+            imprimirMapa
+            putStrLn "\nPressione Enter para voltar ao menu..."
+            _ <- getLine
+            menuPrincipal
+        3 -> do
+            putStrLn "Modo Treino"
+            iniciarTreino []
+            menuPrincipal
+        4 -> do
+            putStrLn "Continuando jogo"
+            missao <- escolherMissao
+            putStrLn $ "\n🚀 Você selecionou: " ++ missao
+            menuPrincipal
+        5 -> do
+            putStrLn "Saindo do jogo... Até a próxima! 👋"
+        _ -> putStrLn "Opção inválida."
 
 
-mostrarRegrasJogo :: FilePath -> IO ()
-mostrarRegrasJogo caminho = do
-  linhas <- carregarLogo caminho
-  mostrarLinhas linhas
-  where
-    mostrarLinhas [] = return ()
-    mostrarLinhas (l : ls) = do
-      putStrLn $ centralizar larguraTerminal l
-      threadDelay 100000
-      mostrarLinhas ls
+mostrarRegrasJogo:: IO()
+mostrarRegrasJogo = do
+  mostrarLogoCentralizada "../banners/regras.txt" 
+  return ()
