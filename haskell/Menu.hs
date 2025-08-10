@@ -10,6 +10,7 @@ import Inicial (paginaInicial)
 import MapaMissoes (escolherMissao, imprimirMapa)
 import Navegacao (escolherOpcaoComTitulo)
 import System.Directory (doesFileExist)
+import Flashcard (iniciarTreino)
 
 menuPrincipal :: IO ()
 menuPrincipal = do
@@ -43,6 +44,7 @@ menuPrincipal = do
       menuPrincipal
     3 -> do
       putStrLn "Modo Treino"
+      iniciarTreino []
       menuPrincipal
     4 -> do
       putStrLn "Continuando jogo"
