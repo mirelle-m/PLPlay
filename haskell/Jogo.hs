@@ -1,5 +1,6 @@
 module Jogo where
 import Missoes
+import Usuario
 import Data.List (filter, take)
 import Data.Maybe (fromMaybe, isNothing)
 import System.CPUTime (getCPUTime)
@@ -41,12 +42,12 @@ continuarJogo = do
 
 novoJogo :: IO ()
 novoJogo = do
-  let largura = larguraTerminal
-  putStrLn $ replicate largura '='
-  putStrLn $ centralizar largura " CRIANDO NOVO PERSONAGEM "
-  putStrLn $ replicate largura '='
-  putStr "Digite o nome do seu personagem: "
-  nome <- getLine
+  -- let largura = larguraTerminal
+  -- putStrLn $ replicate largura '='
+  -- putStrLn $ centralizar largura " CRIANDO NOVO PERSONAGEM "
+  -- putStrLn $ replicate largura '='
+  -- putStr "Digite o nome do seu personagem: "
+  nome <- recuperaLoginAtual
   let novoPersonagem = Personagem nome "1"
   salvarPersonagem "personagem.csv" novoPersonagem
   putStrLn ("Personagem " ++ nome ++ " criado! Comecando na missao 1.")
