@@ -3,8 +3,9 @@ module Usuario where
 import Data.List
 import System.Directory (doesFileExist)
 import System.IO
-import Text.Read (readMaybe)  
-
+import Text.Read (readMaybe)
+import Data.List (intercalate)
+import Control.Exception (evaluate)
 
 data Usuario = Usuario
   { nomeUsuario :: String
@@ -19,17 +20,19 @@ splitOn delimiter = foldr f [[]]
       | c == delimiter = []:h:t
       | otherwise = (c:h):t
 
-salvarUsuario :: Usuario -> IO ()
-salvarUsuario usuario = do
-    let caminho = "../data/usuarios.csv"
-    -- let cabecalho = "nome,senha,progresso"
-    let dadosUsuario = (nomeUsuario usuario) ++ "," ++ (senhaUsuario usuario) ++ "," ++ (progressoUsuario usuario)
-    appendFile caminho (dadosUsuario ++ "\n")
-
 removeAspas :: String -> String
 removeAspas str
   | length str >= 2 && head str == '"' && last str == '"' = init (tail str)
   | otherwise = str
+
+addAspas :: String -> String
+addAspas s = "\"" ++ s ++ "\""
+
+salvarUsuario :: Usuario -> IO ()
+salvarUsuario usuario = do
+    let caminho = "../data/usuarios.csv"
+    let dadosUsuario = intercalate "," [nomeUsuario usuario, senhaUsuario usuario, progressoUsuario usuario]
+    appendFile caminho (dadosUsuario ++ "\n")
 
 carregaUsuario :: String -> IO (Maybe Usuario)
 carregaUsuario userName = do
@@ -38,25 +41,26 @@ carregaUsuario userName = do
         then return Nothing
         else do
             conteudo <- readFile "../data/usuarios.csv"
+            _ <- evaluate (length conteudo)
             let linhas = drop 1 (lines conteudo)
                 usuarios = map (map removeAspas . splitOn ',') linhas
-                usuarioEncontrado = 
+                usuarioEncontrado =
                     case filter (\cols -> not (null cols) && head cols == userName) usuarios of
                         (cols:_) | length cols >= 3 -> Just (Usuario (cols !! 0) (cols !! 1) (cols !! 2))
                         _ -> Nothing
             return usuarioEncontrado
-  
+
 atualizaLoginAtual :: String -> IO ()
 atualizaLoginAtual nomeUsuario = do
     let caminho = "../data/loginAtual.txt"
     writeFile caminho (nomeUsuario ++ "\n")
 
 recuperaLoginAtual :: IO String
-recuperaLoginAtual = readFile "../data/loginAtual.txt"
+recuperaLoginAtual = do
+    conteudo <- readFile "../data/loginAtual.txt"
+    _ <- evaluate (length conteudo)
+    return (filter (/= '\n') conteudo)
 
-
-addAspas :: String -> String
-addAspas s = "\"" ++ s ++ "\""
 
 atualizaProgresso :: String -> IO Bool
 atualizaProgresso novoValor = do
@@ -66,6 +70,7 @@ atualizaProgresso novoValor = do
         then return False
         else do
             conteudo <- readFile caminho
+            _ <- evaluate (length conteudo)
             let linhas = lines conteudo
             if null linhas
                 then return False
