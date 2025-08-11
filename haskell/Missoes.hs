@@ -220,6 +220,7 @@ iniciarQuiz :: [Pergunta] -> Nivel -> String -> IO String
 iniciarQuiz perguntas nivelEscolhido missaoAtual = do
     putStrLn "Iniciando o quiz..."
     resultado <- executarQuiz perguntas (ResultadoQuiz [] [] nivelEscolhido)
+
     
     exibirResumo resultado
     

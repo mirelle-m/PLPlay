@@ -8,6 +8,9 @@ import Text.Read (readMaybe)
 import Navegacao(escolherOpcao,escolherOpcaoComTitulo)
 import MapaMissoes
 import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
+import System.Random (newStdGen)
+import System.Random.Shuffle (shuffle')
+
 
 menuJogo :: IO ()
 menuJogo = do
@@ -82,22 +85,29 @@ escolherMissaoMenu progresso nivelEscolhido = do
     let missoesDisponiveis = obterMissoesDisponiveis (progresso)
 
     let opcoes = filtrarPorIndices missoesDisponiveis missoesMapeadasNomes
-    -- Seleção por setas
     indiceMissao <- escolherOpcao "MISSÕES QUE VOCÊ PODE JOGAR BASEADO NO SEU NÍVEL ATUAL:\n" opcoes
 
-    let missaoEscolhida = indiceMissao + 1 -- índice começa em 0, missões começam em 1
+    let missaoEscolhida = indiceMissao + 1 
 
     putStrLn ("\n\nProcessando missão: " ++ show missaoEscolhida)
-    -- Chama a função que executa a missão
+
     executarMissao progresso nivelEscolhido (show missaoEscolhida)
+
+shuffle :: [a] -> IO [a]
+shuffle xs = do
+    gen <- newStdGen
+    return $ shuffle' xs (length xs) gen
 
 executarMissao :: String -> Nivel -> String -> IO ()
 executarMissao progresso nivelEscolhido missaoDesejada = do
   todasAsPerguntas <- carregaPerguntas "quiz_completo.csv"
-  
+
   let perguntasDaMissao = filter (\p -> missao p == missaoDesejada) todasAsPerguntas
-  
-  let perguntasParaExibir = take 10 perguntasDaMissao
+
+  perguntasEmbaralhadas <- shuffle perguntasDaMissao 
+
+  let perguntasParaExibir = take 10 perguntasEmbaralhadas 
+
   
   if null perguntasParaExibir
     then do
@@ -109,7 +119,7 @@ executarMissao progresso nivelEscolhido missaoDesejada = do
       putStrLn $ replicate largura '='
       putStrLn $ centralizar largura (" INICIANDO QUIZ DA MISSÃO " ++ missaoDesejada)
       putStrLn $ replicate largura '='
-      putStrLn (show numPerguntas ++ " perguntas selecionadas em ordem sequencial")
+      putStrLn (show numPerguntas ++ " perguntas selecionadas em ordem aleatória")
       putStrLn "Pressione Enter para comecar o quiz..."
       putStrLn ("Nível: " ++ show nivelEscolhido ++ " (máximo " ++ show (maxErrosPermitidos nivelEscolhido) ++ " erros)")
       putStrLn ""

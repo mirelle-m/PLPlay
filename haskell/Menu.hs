@@ -20,7 +20,6 @@ menuPrincipal = do
                  , "📰 Ver Regras do Jogo"
                  , "🗺️ Ver Mapa de Missões"
                  , "🎯 Modo Treino"
-                --  , "💾 Continuar Jogo"
                  , "🚪 Sair"
                  ]
                           
@@ -48,11 +47,7 @@ menuPrincipal = do
             putStrLn "Modo Treino"
             iniciarTreino []
             menuPrincipal
-        -- 4 -> do
-        --     putStrLn "Continuando jogo"
-        --     missao <- escolherMissao
-        --     putStrLn $ "\n🚀 Você selecionou: " ++ missao
-        --     menuPrincipal
+            menuPrincipal
         4 -> do
             putStrLn "Saindo do jogo... Até a próxima! 👋"
         _ -> putStrLn "Opção inválida."
