@@ -5,6 +5,7 @@ import Data.List.Split (splitOn)
 import System.Random.Stateful (newStdGen)
 import System.Random.Shuffle (shuffle')
 import Utils (limparTela, larguraTerminal, centralizar)
+import Data.Char (toLower)
 
 data Flashcard = Flashcard {
     pergunta :: String,
@@ -75,7 +76,8 @@ mostrarFlashcards (f:fs) = do
     putStrLn $ replicate largura '='
     putStrLn $ "\n\n" ++ centralizar largura (resposta f) ++ "\n\n"
     putStrLn $ replicate largura '='
-    putStr "\n\nAperte Enter para continuar"
-    _ <- getLine
-    limparTela
-    mostrarFlashcards fs
+    putStrLn "\n\nDigite 'sair' para encerrar o treino ou apenas Enter para continuar"
+    opcao <- getLine
+    if map toLower opcao == "sair"
+        then putStrLn "Treino encerrado!"
+        else mostrarFlashcards fs
