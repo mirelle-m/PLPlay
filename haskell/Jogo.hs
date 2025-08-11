@@ -8,6 +8,8 @@ import Text.Read (readMaybe)
 import Navegacao(escolherOpcao,escolherOpcaoComTitulo)
 import MapaMissoes
 import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
+import System.Random (newStdGen)
+import System.Random.Shuffle (shuffle')
 
 menuJogo :: IO ()
 menuJogo = do
@@ -82,27 +84,33 @@ escolherMissaoMenu personagemAtual nivelEscolhido = do
     let missoesDisponiveis = obterMissoesDisponiveis (missaoCompletada personagemAtual)
 
     let opcoes = filtrarPorIndices missoesDisponiveis missoesMapeadasNomes
-    -- Seleção por setas
     indiceMissao <- escolherOpcao "MISSÕES QUE VOCÊ PODE JOGAR BASEADO NO SEU NÍVEL ATUAL:\n" opcoes
 
-    let missaoEscolhida = indiceMissao + 1 -- índice começa em 0, missões começam em 1
+    let missaoEscolhida = indiceMissao + 1 
 
     putStrLn ("\n\nProcessando missão: " ++ show missaoEscolhida)
 
-    -- Chama a função que executa a missão
     executarMissao personagemAtual nivelEscolhido (show missaoEscolhida)
+
+shuffle :: [a] -> IO [a]
+shuffle xs = do
+    gen <- newStdGen
+    return $ shuffle' xs (length xs) gen
 
 executarMissao :: Personagem -> Nivel -> String -> IO ()
 executarMissao personagemAtual nivelEscolhido missaoDesejada = do
   todasAsPerguntas <- carregaPerguntas "quiz_completo.csv"
   
   let perguntasDaMissao = filter (\p -> missao p == missaoDesejada) todasAsPerguntas
-  
-  let perguntasParaExibir = take 10 perguntasDaMissao
+
+  perguntasEmbaralhadas <- shuffle perguntasDaMissao  -- aqui embaralha
+
+  let perguntasParaExibir = take 10 perguntasEmbaralhadas -- pega as 10 primeiras, aleatórias
+
   
   if null perguntasParaExibir
     then do
-      putStrLn ("Nenhuma pergunta encontrada para a missao " ++ missaoDesejada ++ ".") 
+      putStrLn ("Nenhuma pergunta encontrada para a missao " ++ missaoDesejada ++ ".") -- aqui sua frase estava misturada
       menuContinuar "Verifique se o arquivo quiz_completo.csv esta correto." personagemAtual
     else do
       let numPerguntas = length perguntasParaExibir
@@ -110,8 +118,7 @@ executarMissao personagemAtual nivelEscolhido missaoDesejada = do
       putStrLn $ replicate largura '='
       putStrLn $ centralizar largura (" INICIANDO QUIZ DA MISSÃO " ++ missaoDesejada)
       putStrLn $ replicate largura '='
-      -- putStrLn ("\n--- INICIANDO QUIZ DA MISSÃO " ++ missaoDesejada ++ " ---")
-      putStrLn (show numPerguntas ++ " perguntas selecionadas em ordem sequencial")
+      putStrLn (show numPerguntas ++ " perguntas selecionadas em ordem aleatória")
       putStrLn "Pressione Enter para comecar o quiz..."
       putStrLn ("Nível: " ++ show nivelEscolhido ++ " (máximo " ++ show (maxErrosPermitidos nivelEscolhido) ++ " erros)")
       putStrLn ""
@@ -132,6 +139,7 @@ executarMissao personagemAtual nivelEscolhido missaoDesejada = do
             menuContinuar "\nVocê falhou na missão 😢. Tente novamente!\n" personagemAtual
           else do
             menuContinuar "\nMissão repetida concluida! 🎈\n" personagemAtual
+
 
 menuContinuar :: String -> Personagem -> IO ()
 menuContinuar titulo personagem = do
