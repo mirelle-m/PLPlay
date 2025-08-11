@@ -1,11 +1,13 @@
 module Jogo where
 import Missoes
+import Usuario
 import Data.List (filter, take)
 import Data.Maybe (fromMaybe, isNothing)
 import System.CPUTime (getCPUTime)
 import Text.Read (readMaybe)  
 import Navegacao(escolherOpcao,escolherOpcaoComTitulo)
 import MapaMissoes
+import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
 
 menuJogo :: IO ()
 menuJogo = do
@@ -31,7 +33,7 @@ continuarJogo = do
   
   case personagem of
     Nothing -> do
-      putStrLn "Nenhum personagem encontrado. Sera criado um novo jogo."
+      putStrLn "Nenhum personagem encontrado. Será criado um novo jogo."
       novoJogo
     Just p -> do
       putStrLn ("Bem vindo de volta, " ++ nomePersonagem p ++ "!")
@@ -40,9 +42,12 @@ continuarJogo = do
 
 novoJogo :: IO ()
 novoJogo = do
-  putStrLn "=== CRIANDO NOVO PERSONAGEM ==="
-  putStr "Digite o nome do seu personagem: "
-  nome <- getLine
+  -- let largura = larguraTerminal
+  -- putStrLn $ replicate largura '='
+  -- putStrLn $ centralizar largura " CRIANDO NOVO PERSONAGEM "
+  -- putStrLn $ replicate largura '='
+  -- putStr "Digite o nome do seu personagem: "
+  nome <- recuperaLoginAtual
   let novoPersonagem = Personagem nome "1"
   salvarPersonagem "personagem.csv" novoPersonagem
   putStrLn ("Personagem " ++ nome ++ " criado! Comecando na missao 1.")
@@ -54,12 +59,12 @@ iniciarQuizLoop personagemAtual = do
   putStrLn "Escolha o nivel de dificuldade:"
   putStr "Sua escolha: "
 
-  let opcoes = [ "😊 Facil (pode errar ate 3 questoes)"
-              ,"😉 Medio (pode errar ate 2 questoes)"
-                ,"🤯 Dificil (pode errar ate 1 questao)"
+  let opcoes = [ "😊 Fácil (pode errar até 3 questões)"
+              ,"😉 Médio (pode errar até 2 questões)"
+                ,"🤯 Difícil (pode errar até 1 questão)"
                 ]
   
-  indice <- escolherOpcao "Escolha o nivel de dificuldade:" opcoes
+  indice <- escolherOpcao "Escolha o nível de dificuldade:" opcoes
   let nivelEscolhido = case indice of
           0 -> Facil
           1 -> Medio
@@ -78,7 +83,7 @@ escolherMissaoMenu personagemAtual nivelEscolhido = do
 
     let opcoes = filtrarPorIndices missoesDisponiveis missoesMapeadasNomes
     -- Seleção por setas
-    indiceMissao <- escolherOpcao "MISSÕES QUE VOCÊ PODE JOGAR BASEADO NO SEU NIVEL ATUAL:\n" opcoes
+    indiceMissao <- escolherOpcao "MISSÕES QUE VOCÊ PODE JOGAR BASEADO NO SEU NÍVEL ATUAL:\n" opcoes
 
     let missaoEscolhida = indiceMissao + 1 -- índice começa em 0, missões começam em 1
 
@@ -101,10 +106,14 @@ executarMissao personagemAtual nivelEscolhido missaoDesejada = do
       menuContinuar "Verifique se o arquivo quiz_completo.csv esta correto." personagemAtual
     else do
       let numPerguntas = length perguntasParaExibir
-      putStrLn ("\n--- INICIANDO QUIZ DA MISSAO " ++ missaoDesejada ++ " ---")
+      let largura = larguraTerminal
+      putStrLn $ replicate largura '='
+      putStrLn $ centralizar largura (" INICIANDO QUIZ DA MISSÃO " ++ missaoDesejada)
+      putStrLn $ replicate largura '='
+      -- putStrLn ("\n--- INICIANDO QUIZ DA MISSÃO " ++ missaoDesejada ++ " ---")
       putStrLn (show numPerguntas ++ " perguntas selecionadas em ordem sequencial")
       putStrLn "Pressione Enter para comecar o quiz..."
-      putStrLn ("Nivel: " ++ show nivelEscolhido ++ " (maximo " ++ show (maxErrosPermitidos nivelEscolhido) ++ " erros)")
+      putStrLn ("Nível: " ++ show nivelEscolhido ++ " (máximo " ++ show (maxErrosPermitidos nivelEscolhido) ++ " erros)")
       putStrLn ""
       
       _ <- getLine
@@ -116,13 +125,13 @@ executarMissao personagemAtual nivelEscolhido missaoDesejada = do
           let novaMissaoCompletada = atualizarProgressoPersonagem missaoDesejada (missaoCompletada personagemAtual)
           let personagemAtualizado = personagemAtual { missaoCompletada = novaMissaoCompletada }
           salvarPersonagem "personagem.csv" personagemAtualizado
-          menuContinuar ("\nParabens 🥳! Voce desbloqueou a missao " ++ novaMissaoCompletada ++ "🎉!\n") personagemAtualizado
+          menuContinuar ("\nParabéns 🥳! Você desbloqueou a missão " ++ novaMissaoCompletada ++ "🎉!\n") personagemAtualizado
         else if resultadoMissao == "-1"
           then do
             _ <- getLine
-            menuContinuar "\nVoce falhou na missao 😢. Tente novamente!\n" personagemAtual
+            menuContinuar "\nVocê falhou na missão 😢. Tente novamente!\n" personagemAtual
           else do
-            menuContinuar "\nMissao repetida concluida! 🎈\n" personagemAtual
+            menuContinuar "\nMissão repetida concluida! 🎈\n" personagemAtual
 
 menuContinuar :: String -> Personagem -> IO ()
 menuContinuar titulo personagem = do

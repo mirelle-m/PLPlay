@@ -18,9 +18,9 @@ menuPrincipal = do
     let largura = larguraTerminal
     let opcoes = [ "🎮 Jogar"
                  , "📰 Ver Regras do Jogo"
-                 , "🗺️  Ver Mapa de Missões"
+                 , "🗺️ Ver Mapa de Missões"
                  , "🎯 Modo Treino"
-                 , "💾 Continuar Jogo"
+                --  , "💾 Continuar Jogo"
                  , "🚪 Sair"
                  ]
                           
@@ -48,12 +48,12 @@ menuPrincipal = do
             putStrLn "Modo Treino"
             iniciarTreino []
             menuPrincipal
+        -- 4 -> do
+        --     putStrLn "Continuando jogo"
+        --     missao <- escolherMissao
+        --     putStrLn $ "\n🚀 Você selecionou: " ++ missao
+        --     menuPrincipal
         4 -> do
-            putStrLn "Continuando jogo"
-            missao <- escolherMissao
-            putStrLn $ "\n🚀 Você selecionou: " ++ missao
-            menuPrincipal
-        5 -> do
             putStrLn "Saindo do jogo... Até a próxima! 👋"
         _ -> putStrLn "Opção inválida."
 
