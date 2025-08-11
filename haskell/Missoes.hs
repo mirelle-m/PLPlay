@@ -7,7 +7,6 @@ import Text.Read (readMaybe)
 import Utils
 import Usuario
 
-
 data Pergunta = Pergunta
   { idQuestao :: String
   , missao :: String
