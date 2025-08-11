@@ -8,6 +8,7 @@ import Text.Read (readMaybe)
 import Navegacao(escolherOpcao,escolherOpcaoComTitulo)
 import MapaMissoes
 import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
+import System.Random (randomRIO)
 
 menuJogo :: IO ()
 menuJogo = do
@@ -95,9 +96,9 @@ escolherMissaoMenu personagemAtual nivelEscolhido = do
 executarMissao :: Personagem -> Nivel -> String -> IO ()
 executarMissao personagemAtual nivelEscolhido missaoDesejada = do
   todasAsPerguntas <- carregaPerguntas "quiz_completo.csv"
-  
-  let perguntasDaMissao = filter (\p -> missao p == missaoDesejada) todasAsPerguntas
-  
+
+  perguntasDaMissao <- shuffle (filter (\p -> missao p == missaoDesejada) todasAsPerguntas)
+
   let perguntasParaExibir = take 10 perguntasDaMissao
   
   if null perguntasParaExibir
@@ -132,6 +133,15 @@ executarMissao personagemAtual nivelEscolhido missaoDesejada = do
             menuContinuar "\nVocê falhou na missão 😢. Tente novamente!\n" personagemAtual
           else do
             menuContinuar "\nMissão repetida concluida! 🎈\n" personagemAtual
+
+shuffle :: [a] -> IO [a]
+shuffle [] = return []
+shuffle xs = do
+    i <- randomRIO (0, length xs - 1)
+    let (left, (a:right)) = splitAt i xs
+    rest <- shuffle (left ++ right)
+    return (a : rest)
+
 
 menuContinuar :: String -> Personagem -> IO ()
 menuContinuar titulo personagem = do

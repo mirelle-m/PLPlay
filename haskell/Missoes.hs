@@ -208,18 +208,12 @@ atualizarProgressoPersonagem missaoAtual missaoCompletada =
                else missaoCompletada
         _ -> missaoCompletada
 
-shuffle :: [a] -> IO [a]
-shuffle [] = return []
-shuffle xs = do
-    i <- randomRIO (0, length xs - 1)
-    let (left, (a:right)) = splitAt i xs
-    rest <- shuffle (left ++ right)
-    return (a : rest)
+
 
 iniciarQuiz :: [Pergunta] -> Nivel -> String -> IO String
 iniciarQuiz perguntas nivelEscolhido missaoAtual = do
     putStrLn "Iniciando o quiz..."
-    perguntasEmbaralhadas <- shuffle perguntas
+    let perguntasEmbaralhadas = perguntas
     resultado <- executarQuiz perguntasEmbaralhadas (ResultadoQuiz [] [] nivelEscolhido)
     
     exibirResumo resultado
