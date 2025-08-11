@@ -4,7 +4,7 @@ import System.IO (hFlush, stdout)
 import Data.List.Split (splitOn)
 import System.Random.Stateful (newStdGen)
 import System.Random.Shuffle (shuffle')
-import Utils (limparTela)
+import Utils (limparTela, larguraTerminal, centralizar)
 
 data Flashcard = Flashcard {
     pergunta :: String,
@@ -66,12 +66,16 @@ mostrarFlashcards :: [Flashcard] -> IO ()
 mostrarFlashcards [] = return ()
 mostrarFlashcards (f:fs) = do
     limparTela
-    putStrLn $ pergunta f
-    putStr "\n\n\nAperte Enter para ver a resposta"
+    let largura = larguraTerminal
+    putStrLn $ replicate largura '='
+    putStrLn $ "\n\n" ++ centralizar largura (pergunta f) ++ "\n\n"
+    putStrLn $ replicate largura '='
+    putStr "\n\nAperte Enter para ver a resposta\n\n\n"
     _ <- getLine
-    putStrLn "\n\n\n=========================================================================\n\n\n"
-    putStrLn $ resposta f
-    putStr "\n\n\nAperte Enter para continuar"
+    putStrLn $ replicate largura '='
+    putStrLn $ "\n\n" ++ centralizar largura (resposta f) ++ "\n\n"
+    putStrLn $ replicate largura '='
+    putStr "\n\nAperte Enter para continuar"
     _ <- getLine
     limparTela
     mostrarFlashcards fs
