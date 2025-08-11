@@ -21,10 +21,10 @@ splitOn delimiter = foldr f [[]]
 
 salvarUsuario :: Usuario -> IO ()
 salvarUsuario usuario = do
-    let caminho = "personagem.csv"
-    let cabecalho = "nome,senha,progresso"
+    let caminho = "../data/usuarios.csv"
+    -- let cabecalho = "nome,senha,progresso"
     let dadosUsuario = (nomeUsuario usuario) ++ "," ++ (senhaUsuario usuario) ++ "," ++ (progressoUsuario usuario)
-    writeFile caminho (cabecalho ++ "\n" ++ dadosUsuario ++ "\n")
+    appendFile caminho (dadosUsuario ++ "\n")
 
 removeAspas :: String -> String
 removeAspas str
@@ -33,11 +33,11 @@ removeAspas str
 
 carregaUsuario :: String -> IO (Maybe Usuario)
 carregaUsuario userName = do
-    existe <- doesFileExist "personagem.csv"
+    existe <- doesFileExist "../data/usuarios.csv"
     if not existe
         then return Nothing
         else do
-            conteudo <- readFile "personagem.csv"
+            conteudo <- readFile "../data/usuarios.csv"
             let linhas = drop 1 (lines conteudo)
                 usuarios = map (map removeAspas . splitOn ',') linhas
                 usuarioEncontrado = 
@@ -45,5 +45,42 @@ carregaUsuario userName = do
                         (cols:_) | length cols >= 3 -> Just (Usuario (cols !! 0) (cols !! 1) (cols !! 2))
                         _ -> Nothing
             return usuarioEncontrado
+  
+atualizaLoginAtual :: String -> IO ()
+atualizaLoginAtual nomeUsuario = do
+    let caminho = "../data/loginAtual.txt"
+    writeFile caminho (nomeUsuario ++ "\n")
 
--- atualizarProgresso :: String -> 
+recuperaLoginAtual :: IO String
+recuperaLoginAtual = readFile "../data/loginAtual.txt"
+
+
+addAspas :: String -> String
+addAspas s = "\"" ++ s ++ "\""
+
+atualizaProgresso :: String -> IO Bool
+atualizaProgresso novoValor = do
+    let caminho =  "../data/usuarios.csv"
+    existe <- doesFileExist caminho
+    if not existe
+        then return False
+        else do
+            conteudo <- readFile caminho
+            let linhas = lines conteudo
+            if null linhas
+                then return False
+                else do
+                    userName <- recuperaLoginAtual
+                    let cabecalho = head linhas
+                        dados = tail linhas
+                        dadosAtualizados = map (atualizarSeNomeBater userName novoValor) dados
+                        novoConteudo = unlines (cabecalho : dadosAtualizados)
+                    writeFile caminho novoConteudo
+                    return True
+
+atualizarSeNomeBater :: String -> String -> String -> String
+atualizarSeNomeBater nome novoValor linha =
+    let colunas = map removeAspas (splitOn ',' linha)
+    in if not (null colunas) && head colunas == nome && length colunas >= 3
+        then intercalate "," [addAspas (colunas !! 0), addAspas (colunas !! 1), addAspas novoValor]
+        else linha

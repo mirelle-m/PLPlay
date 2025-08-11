@@ -19,7 +19,7 @@ loopAutenticacao = do
     Left (UsuarioInvalido msg) -> putStrLn ("Erro: " ++ msg) >> loopAutenticacao
     Left (SenhaInvalida msg) -> putStrLn ("Erro: " ++ msg) >> loopAutenticacao
     Right True -> menuPrincipal
-    Right False -> putStrLn "Falha na autenticação."
+    Right False -> putStrLn "Falha na autenticação." >> loopAutenticacao
 
 data AutenticacaoException
   = UsuarioInvalido String
@@ -64,7 +64,7 @@ autenticarUsuario = do
         Left err -> throwIO (SenhaInvalida err)
         Right () -> do
           let usuarioNovo = Usuario username senha "1"
-          exists <- doesFileExist "personagem.csv"
+          exists <- doesFileExist "../data/usuarios.csv"
           if exists
             then do
               usuario <- carregaUsuario username
@@ -72,14 +72,16 @@ autenticarUsuario = do
                 Nothing -> do
                   salvarUsuario usuarioNovo
                   putStrLn "✅ Cadastro realizado com sucesso!"
+                  atualizaLoginAtual username
                   return True
                 Just u -> do
                   if senha == (senhaUsuario u) then do
                     putStrLn "✅ Autenticado com sucesso!"
+                    atualizaLoginAtual username
                     return True
                   else do 
                     putStrLn "❌ Senha incorreta! Tente Novamente!"
-                    return True
+                    return False
           else do
               putStrLn "Ops! Algo deu errado! Tente novamente!"
-              return True
+              return False
