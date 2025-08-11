@@ -6,6 +6,7 @@ import Data.Char (toLower)
 import Text.Read (readMaybe)  
 import Utils (larguraTerminal, limparTela )
 import Usuario
+import System.Random (randomRIO)
 
 
 data Personagem = Personagem
@@ -66,10 +67,7 @@ salvarPersonagem caminho personagem = do
     let dadosPersonagem = nomePersonagem personagem ++ "," ++ missaoCompletada personagem
     writeFile caminho (cabecalho ++ "\n" ++ dadosPersonagem ++ "\n")
 
--- removeAspas :: String -> String
--- removeAspas str
---   | length str >= 2 && head str == '"' && last str == '"' = init (tail str)
---   | otherwise = str
+
 
 parseLinha :: String -> Pergunta
 parseLinha linha =
@@ -86,12 +84,6 @@ parseLinha linha =
     , texto_alternativa_e = colunas !! 8
     }
 
--- splitOn :: Char -> String -> [String]
--- splitOn delimiter = foldr f [[]]
---   where
---     f c (h:t)
---       | c == delimiter = []:h:t
---       | otherwise = (c:h):t
 
 exibirPergunta :: Pergunta -> IO ()
 exibirPergunta p = do
@@ -216,10 +208,19 @@ atualizarProgressoPersonagem missaoAtual missaoCompletada =
                else missaoCompletada
         _ -> missaoCompletada
 
+shuffle :: [a] -> IO [a]
+shuffle [] = return []
+shuffle xs = do
+    i <- randomRIO (0, length xs - 1)
+    let (left, (a:right)) = splitAt i xs
+    rest <- shuffle (left ++ right)
+    return (a : rest)
+
 iniciarQuiz :: [Pergunta] -> Nivel -> String -> IO String
 iniciarQuiz perguntas nivelEscolhido missaoAtual = do
     putStrLn "Iniciando o quiz..."
-    resultado <- executarQuiz perguntas (ResultadoQuiz [] [] nivelEscolhido)
+    perguntasEmbaralhadas <- shuffle perguntas
+    resultado <- executarQuiz perguntasEmbaralhadas (ResultadoQuiz [] [] nivelEscolhido)
     
     exibirResumo resultado
     
@@ -228,7 +229,7 @@ iniciarQuiz perguntas nivelEscolhido missaoAtual = do
     
     if numErros < maxErrosPermitidos nivelAtual && not (null perguntas)
         then return missaoAtual  
-        else return "-1"  
+        else return "-1" 
 
 executarQuiz :: [Pergunta] -> ResultadoQuiz -> IO ResultadoQuiz
 executarQuiz [] resultado = return resultado

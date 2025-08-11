@@ -52,7 +52,9 @@ mostrarLogoCentralizada caminho = do
   mapM_ putStrLn (centralizarBloco larguraTerminal linhas)
 
 
-centralizarTitulo :: FilePath -> IO ()
-centralizarTitulo caminho = do
-  linhas <- fmap lines (readFile caminho)
-  mapM_ putStrLn (centralizarBloco larguraTerminal linhas)
+
+exibirBanner :: FilePath -> IO ()
+exibirBanner caminho = do
+    conteudo <- readFile caminho
+    putStrLn conteudo
+    return ()
