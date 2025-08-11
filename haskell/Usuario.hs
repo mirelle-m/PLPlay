@@ -28,69 +28,12 @@ removeAspas str
 addAspas :: String -> String
 addAspas s = "\"" ++ s ++ "\""
 
--- salvarUsuario :: Usuario -> IO ()
--- salvarUsuario usuario = do
---     let caminho = "../data/usuarios.csv"
---     let dadosUsuario = (nomeUsuario usuario) ++ "," ++ (senhaUsuario usuario) ++ "," ++ (progressoUsuario usuario)
---     appendFile caminho (dadosUsuario ++ "\n")
-
--- carregaUsuario :: String -> IO (Maybe Usuario)
--- carregaUsuario userName = do
---     existe <- doesFileExist "../data/usuarios.csv"
---     if not existe
---         then return Nothing
---         else do
---             conteudo <- readFile "../data/usuarios.csv"
---             let linhas = drop 1 (lines conteudo)
---                 usuarios = map (map removeAspas . splitOn ',') linhas
---                 usuarioEncontrado = 
---                     case filter (\cols -> not (null cols) && head cols == userName) usuarios of
---                         (cols:_) | length cols >= 3 -> Just (Usuario (cols !! 0) (cols !! 1) (cols !! 2))
---                         _ -> Nothing
---             return usuarioEncontrado
-  
--- atualizaLoginAtual :: String -> IO ()
--- atualizaLoginAtual nomeUsuario = do
---     let caminho = "../data/loginAtual.txt"
---     writeFile caminho (nomeUsuario ++ "\n")
-
--- recuperaLoginAtual :: IO String
--- recuperaLoginAtual = readFile "../data/loginAtual.txt"
-
--- atualizaProgresso :: String -> IO Bool
--- atualizaProgresso novoValor = do
---     let caminho =  "../data/usuarios.csv"
---     existe <- doesFileExist caminho
---     if not existe
---         then return False
---         else do
---             conteudo <- readFile caminho
---             let linhas = lines conteudo
---             if null linhas
---                 then return False
---                 else do
---                     userName <- recuperaLoginAtual
---                     let cabecalho = head linhas
---                         dados = tail linhas
---                         dadosAtualizados = map (atualizarSeNomeBater userName novoValor) dados
---                         novoConteudo = unlines (cabecalho : dadosAtualizados)
---                     writeFile caminho novoConteudo
---                     return True
-
--- atualizarSeNomeBater :: String -> String -> String -> String
--- atualizarSeNomeBater nome novoValor linha =
---     let colunas = map removeAspas (splitOn ',' linha)
---     in if not (null colunas) && head colunas == nome && length colunas >= 3
---         then intercalate "," [addAspas (colunas !! 0), addAspas (colunas !! 1), addAspas novoValor]
---         else linha
-
 salvarUsuario :: Usuario -> IO ()
 salvarUsuario usuario = do
     let caminho = "../data/usuarios.csv"
     let dadosUsuario = intercalate "," [nomeUsuario usuario, senhaUsuario usuario, progressoUsuario usuario]
     appendFile caminho (dadosUsuario ++ "\n")
 
--- Carregar um usuário pelo nome
 carregaUsuario :: String -> IO (Maybe Usuario)
 carregaUsuario userName = do
     existe <- doesFileExist "../data/usuarios.csv"
@@ -98,7 +41,7 @@ carregaUsuario userName = do
         then return Nothing
         else do
             conteudo <- readFile "../data/usuarios.csv"
-            _ <- evaluate (length conteudo)  -- força a leitura completa
+            _ <- evaluate (length conteudo)
             let linhas = drop 1 (lines conteudo)
                 usuarios = map (map removeAspas . splitOn ',') linhas
                 usuarioEncontrado =
@@ -107,20 +50,18 @@ carregaUsuario userName = do
                         _ -> Nothing
             return usuarioEncontrado
 
--- Atualiza arquivo de login atual
 atualizaLoginAtual :: String -> IO ()
 atualizaLoginAtual nomeUsuario = do
     let caminho = "../data/loginAtual.txt"
     writeFile caminho (nomeUsuario ++ "\n")
 
--- Recupera login atual
 recuperaLoginAtual :: IO String
 recuperaLoginAtual = do
     conteudo <- readFile "../data/loginAtual.txt"
-    _ <- evaluate (length conteudo)  -- força leitura
+    _ <- evaluate (length conteudo)
     return (filter (/= '\n') conteudo)
 
--- Atualiza progresso de um usuário
+
 atualizaProgresso :: String -> IO Bool
 atualizaProgresso novoValor = do
     let caminho =  "../data/usuarios.csv"
@@ -129,7 +70,7 @@ atualizaProgresso novoValor = do
         then return False
         else do
             conteudo <- readFile caminho
-            _ <- evaluate (length conteudo)  -- força leitura
+            _ <- evaluate (length conteudo)
             let linhas = lines conteudo
             if null linhas
                 then return False
@@ -142,7 +83,6 @@ atualizaProgresso novoValor = do
                     writeFile caminho novoConteudo
                     return True
 
--- Função auxiliar para atualizar a linha do usuário
 atualizarSeNomeBater :: String -> String -> String -> String
 atualizarSeNomeBater nome novoValor linha =
     let colunas = map removeAspas (splitOn ',' linha)
