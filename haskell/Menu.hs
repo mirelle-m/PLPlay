@@ -5,11 +5,11 @@ import Control.Exception
 import Data.Char (isAlphaNum, isDigit, isLower, isUpper)
 import Data.List (isInfixOf)
 import Data.Typeable (Typeable)
-import Utils (centralizar, limparTela, limparTelaCompleta, larguraTerminal, mostrarLogoCentralizada, carregarLogo)
-import Inicial (paginaInicial)
-import MapaMissoes (escolherMissao, imprimirMapa)
-import Navegacao (escolherOpcaoComTitulo)
-import Jogo (menuJogo)
+import Utils 
+import Inicial 
+import Navegacao 
+import Missoes 
+import Jogo 
 import System.Directory (doesFileExist)
 import Flashcard (iniciarTreino)
 
@@ -18,7 +18,7 @@ menuPrincipal = do
     let largura = larguraTerminal
     let opcoes = [ "🎮 Jogar"
                  , "📰 Ver Regras do Jogo"
-                 , "🗺️ Ver Mapa de Missões"
+                 , "🗺️  Ver Mapa de Missões"
                  , "🎯 Modo Treino"
                  , "🚪 Sair"
                  ]

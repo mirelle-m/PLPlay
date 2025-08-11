@@ -4,15 +4,9 @@ import System.IO
 import Data.List (isPrefixOf, take, filter)
 import Data.Char (toLower)
 import Text.Read (readMaybe)  
-import Utils (larguraTerminal, limparTela )
+import Utils
 import Usuario
 
-
-data Personagem = Personagem
-  { nomePersonagem :: String
---   , senhaUsuario :: String
-  , missaoCompletada :: String
-  } deriving (Show)
 
 data Pergunta = Pergunta
   { idQuestao :: String
@@ -40,36 +34,10 @@ carregaPerguntas caminho = do
     let linhas = tail (lines conteudo)
     return (map parseLinha linhas)
 
-carregaPersonagem :: FilePath -> IO (Maybe Personagem)
-carregaPersonagem caminho = do
-    existe <- doesFileExist caminho
-    if not existe
-        then return Nothing
-        else do
-            conteudo <- readFile caminho
-            let linhas = lines conteudo
-            if length linhas >= 2
-                then do
-                    let dadosLinha = tail linhas !! 0
-                    let colunas = map removeAspas (splitOn ',' dadosLinha)
-                    if length colunas >= 2
-                        then return $ Just $ Personagem (colunas !! 0) (colunas !! 1)
-                        else return Nothing
-                else return Nothing
 
 doesFileExist :: FilePath -> IO Bool
 doesFileExist _ = return True 
 
-salvarPersonagem :: FilePath -> Personagem -> IO ()
-salvarPersonagem caminho personagem = do
-    let cabecalho = "nome,Missao_completada"
-    let dadosPersonagem = nomePersonagem personagem ++ "," ++ missaoCompletada personagem
-    writeFile caminho (cabecalho ++ "\n" ++ dadosPersonagem ++ "\n")
-
--- removeAspas :: String -> String
--- removeAspas str
---   | length str >= 2 && head str == '"' && last str == '"' = init (tail str)
---   | otherwise = str
 
 parseLinha :: String -> Pergunta
 parseLinha linha =
@@ -86,12 +54,6 @@ parseLinha linha =
     , texto_alternativa_e = colunas !! 8
     }
 
--- splitOn :: Char -> String -> [String]
--- splitOn delimiter = foldr f [[]]
---   where
---     f c (h:t)
---       | c == delimiter = []:h:t
---       | otherwise = (c:h):t
 
 exibirPergunta :: Pergunta -> IO ()
 exibirPergunta p = do
@@ -129,14 +91,7 @@ perguntaParaCSV p =
 
 salvarRespostaAcertada :: Pergunta -> IO ()
 salvarRespostaAcertada pergunta = do
-    appendFile "respostasAcertadas.csv" (perguntaParaCSV pergunta ++ "\n")
-
-stringParaNivel :: String -> Maybe Nivel
-stringParaNivel s
-  | normalizaResposta s == "facil" || s == "1" = Just Facil
-  | normalizaResposta s == "medio" || s == "2" = Just Medio
-  | normalizaResposta s == "dificil" || s == "3" = Just Dificil
-  | otherwise = Nothing
+    appendFile "../data/corretas.csv" (perguntaParaCSV pergunta ++ "\n")
 
 maxErrosPermitidos :: Nivel -> Int
 maxErrosPermitidos Facil = 3
@@ -248,8 +203,7 @@ executarQuiz (h:t) resultado = do
             putStrLn ""
             exibirPergunta h
             
-            putStr "Escolha uma alternativa: "
-            alternativa_usuario <- getLine
+            alternativa_usuario <- captura_alternativa
             
             let comparacao = compara_acertou_errou alternativa_usuario (alternativa_Certa h)
             
@@ -267,3 +221,31 @@ executarQuiz (h:t) resultado = do
                     putStrLn "Pressione ENTER para continuar..."
                     _ <- getLine
                     executarQuiz t novoResultado
+
+captura_alternativa :: IO String
+captura_alternativa = do
+    let validas = ["a", "b", "c", "d", "e"]
+    putStr "Escolha uma alternativa (a, b, c, d, e):"
+    alternativa <- getLine
+    if alternativa `elem` validas
+        then return alternativa
+        else do
+            putStrLn "Opção inválida. Tente novamente.\n"
+            captura_alternativa
+
+
+missoesMapeadasNomes :: [String]
+missoesMapeadasNomes = ["🧭 Missão 1: Introdução - Históricos e Características"
+      ,"🧭 Missão 2: Classificação e Características"
+      ,"🧭 Missão 3: Valores, Tipos e Sistema de Tipos"
+      ,"🧭 Missão 4: Paradigma Imperativo"
+      ,"👾 Chefão 5: Batalha dos Fundamentos"
+      ,"🧭 Missão 6: Paradigma Funcional"
+      ,"👾 Chefão 7: Guardião da Recursão"
+      ,"🧭 Missão 8: Paradigma Lógico"
+      ,"👾 Chefão 9: Mestre da Dedução"]
+
+imprimirMapa :: IO ()
+imprimirMapa = do
+  mostrarLogoCentralizada "../banners/mapa.txt"
+

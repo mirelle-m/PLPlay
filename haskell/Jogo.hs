@@ -6,7 +6,6 @@ import Data.Maybe (fromMaybe, isNothing)
 import System.CPUTime (getCPUTime)
 import Text.Read (readMaybe)  
 import Navegacao(escolherOpcao,escolherOpcaoComTitulo)
-import MapaMissoes
 import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
 import System.Random (newStdGen)
 import System.Random.Shuffle (shuffle')
@@ -85,6 +84,7 @@ escolherMissaoMenu progresso nivelEscolhido = do
     let missoesDisponiveis = obterMissoesDisponiveis (progresso)
 
     let opcoes = filtrarPorIndices missoesDisponiveis missoesMapeadasNomes
+    
     indiceMissao <- escolherOpcao "MISSÕES QUE VOCÊ PODE JOGAR BASEADO NO SEU NÍVEL ATUAL:\n" opcoes
 
     let missaoEscolhida = indiceMissao + 1 
@@ -100,7 +100,7 @@ shuffle xs = do
 
 executarMissao :: String -> Nivel -> String -> IO ()
 executarMissao progresso nivelEscolhido missaoDesejada = do
-  todasAsPerguntas <- carregaPerguntas "quiz_completo.csv"
+  todasAsPerguntas <- carregaPerguntas "../data/perguntas.csv"
 
   let perguntasDaMissao = filter (\p -> missao p == missaoDesejada) todasAsPerguntas
 
@@ -112,7 +112,7 @@ executarMissao progresso nivelEscolhido missaoDesejada = do
   if null perguntasParaExibir
     then do
       putStrLn ("Nenhuma pergunta encontrada para a missao " ++ missaoDesejada ++ ".") 
-      menuContinuar "Verifique se o arquivo quiz_completo.csv esta correto." progresso
+      menuContinuar "Verifique se o arquivo ../data/perguntas.csv esta correto." progresso
     else do
       let numPerguntas = length perguntasParaExibir
       let largura = larguraTerminal

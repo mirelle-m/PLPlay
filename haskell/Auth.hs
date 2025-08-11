@@ -5,7 +5,6 @@ import Control.Exception
 import Data.Char (isAlphaNum, isDigit, isLower, isUpper)
 import Data.List (isInfixOf)
 import Data.Typeable (Typeable)
-import MapaMissoes (escolherMissao, imprimirMapa)
 import Menu (menuPrincipal)
 import Navegacao (escolherOpcaoComTitulo)
 import System.Directory (doesFileExist)
