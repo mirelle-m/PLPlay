@@ -11,6 +11,7 @@ import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
 import System.Random (newStdGen)
 import System.Random.Shuffle (shuffle')
 
+
 menuJogo :: IO ()
 menuJogo = do
 
@@ -99,8 +100,7 @@ shuffle xs = do
 
 executarMissao :: Personagem -> Nivel -> String -> IO ()
 executarMissao personagemAtual nivelEscolhido missaoDesejada = do
-  todasAsPerguntas <- carregaPerguntas "quiz_completo.csv"
-  
+  todasAsPerguntas <- carregaPerguntas "quiz_completo.csv"  
   let perguntasDaMissao = filter (\p -> missao p == missaoDesejada) todasAsPerguntas
 
   perguntasEmbaralhadas <- shuffle perguntasDaMissao  -- aqui embaralha
