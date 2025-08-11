@@ -4,7 +4,7 @@ import System.IO (hFlush, stdout)
 import Data.List.Split (splitOn)
 import System.Random.Stateful (newStdGen)
 import System.Random.Shuffle (shuffle')
-import Utils (limparTela)
+import Utils
 import Data.Char (toLower)
 
 data Flashcard = Flashcard {
@@ -67,11 +67,15 @@ mostrarFlashcards :: [Flashcard] -> IO ()
 mostrarFlashcards [] = return ()
 mostrarFlashcards (f:fs) = do
     limparTela
-    putStrLn $ pergunta f
-    putStr "\n\n\nAperte Enter para ver a resposta"
+    let largura = larguraTerminal
+    putStrLn $ replicate largura '='
+    putStrLn $ "\n\n" ++ centralizar largura (pergunta f) ++ "\n\n"
+    putStrLn $ replicate largura '='
+    putStr "\n\nAperte Enter para ver a resposta\n\n\n"
     _ <- getLine
-    putStrLn "\n\n\n=========================================================================\n\n\n"
-    putStrLn $ resposta f
+    putStrLn $ replicate largura '='
+    putStrLn $ "\n\n" ++ centralizar largura (resposta f) ++ "\n\n"
+    putStrLn $ replicate largura '='
     putStrLn "\n\nDigite 'sair' para encerrar o treino ou apenas Enter para continuar"
     opcao <- getLine
     if map toLower opcao == "sair"

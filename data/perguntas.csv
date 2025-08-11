@@ -181,3 +181,4 @@ C3_Q17,9,Como se representa um comentario de uma unica linha em Prolog,a,`%`,`//
 C3_Q18,9,Qual dos seguintes e um predicado de entrada e saida em Prolog,d,`sum`,`head`,`father`,`write`,`is`,`write`
 C3_Q19,9,"O que e a ""clausula de Horn""",c,Um tipo de dado,Um comando de atribuicao,Uma forma de representacao utilizada em programacao logica,Uma regra sem corpo,Um fato com varias cabecas,Uma forma de representacao utilizada em programacao logica
 C3_Q20,9,Qual a ordem de avaliacao de metas em uma regra Prolog,b,Da direita para a esquerda,Da esquerda para a direita,De forma aleatoria,Do topo para o final da regra,De baixo para cima,Da esquerda para a direita
+

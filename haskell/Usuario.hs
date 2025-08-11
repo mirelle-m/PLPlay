@@ -7,26 +7,14 @@ import Text.Read (readMaybe)
 import Data.List (intercalate)
 import Control.Exception (evaluate)
 
+import Utils (removeAspas, adicionaAspas)
+import Data.List.Split (splitOn)
+
 data Usuario = Usuario
   { nomeUsuario :: String
   , senhaUsuario :: String
   , progressoUsuario :: String
   } deriving (Show)
-
-splitOn :: Char -> String -> [String]
-splitOn delimiter = foldr f [[]]
-  where
-    f c (h:t)
-      | c == delimiter = []:h:t
-      | otherwise = (c:h):t
-
-removeAspas :: String -> String
-removeAspas str
-  | length str >= 2 && head str == '"' && last str == '"' = init (tail str)
-  | otherwise = str
-
-addAspas :: String -> String
-addAspas s = "\"" ++ s ++ "\""
 
 salvarUsuario :: Usuario -> IO ()
 salvarUsuario usuario = do
@@ -43,7 +31,7 @@ carregaUsuario userName = do
             conteudo <- readFile "../data/usuarios.csv"
             _ <- evaluate (length conteudo)
             let linhas = drop 1 (lines conteudo)
-                usuarios = map (map removeAspas . splitOn ',') linhas
+                usuarios = map (map removeAspas . splitOn ",") linhas
                 usuarioEncontrado =
                     case filter (\cols -> not (null cols) && head cols == userName) usuarios of
                         (cols:_) | length cols >= 3 -> Just (Usuario (cols !! 0) (cols !! 1) (cols !! 2))
@@ -85,7 +73,7 @@ atualizaProgresso novoValor = do
 
 atualizarSeNomeBater :: String -> String -> String -> String
 atualizarSeNomeBater nome novoValor linha =
-    let colunas = map removeAspas (splitOn ',' linha)
+    let colunas = map removeAspas (splitOn "," linha)
     in if not (null colunas) && head colunas == nome && length colunas >= 3
-        then intercalate "," [addAspas (colunas !! 0), addAspas (colunas !! 1), addAspas novoValor]
+        then intercalate "," [adicionaAspas (colunas !! 0), adicionaAspas (colunas !! 1), adicionaAspas novoValor]
         else linha
