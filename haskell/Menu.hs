@@ -32,8 +32,7 @@ menuPrincipal = do
             menuPrincipal
         1 -> do
             limparTelaCompleta
-            mostrarRegrasJogo
-
+            mostrarLogoCentralizada "../banners/regras.txt"
             putStrLn "\nPressione Enter para voltar ao menu..."
             _ <- getLine
             menuPrincipal
@@ -52,8 +51,3 @@ menuPrincipal = do
             putStrLn "Saindo do jogo... Até a próxima! 👋"
         _ -> putStrLn "Opção inválida."
 
-
-mostrarRegrasJogo:: IO()
-mostrarRegrasJogo = do
-  mostrarLogoCentralizada "../banners/regras.txt" 
-  return ()

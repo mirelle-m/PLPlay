@@ -11,14 +11,14 @@
 ║      🧭 Missão 2: Classificação e Características               ║
 ║      🧭 Missão 3: Valores, Tipos e Sistema de Tipos             ║
 ║      🧭 Missão 4: Paradigma Imperativo                          ║
-║      👾 Chefão 1: Batalha dos Fundamentos                       ║
+║      👾 Chefão 5: Batalha dos Fundamentos                       ║
 ║                                                                 ║
 ║                 🌟 Segundo Estágio                              ║
-║      🧭 Missão 5: Paradigma Funcional                           ║
-║      👾 Chefão 2: Guardião da Recursão                          ║
+║      🧭 Missão 6: Paradigma Funcional                           ║
+║      👾 Chefão 7: Guardião da Recursão                          ║
 ║                                                                 ║
 ║                 🌟 Terceiro Estágio                             ║
-║      🧭 Missão 6: Paradigma Lógico                              ║
-║      👾 Chefão 3: Mestre da Dedução                             ║
+║      🧭 Missão 8: Paradigma Lógico                              ║
+║      👾 Chefão 9: Mestre da Dedução                             ║
 ║                                                                 ║
 ╚═════════════════════════════════════════════════════════════════╝

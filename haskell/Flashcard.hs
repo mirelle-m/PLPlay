@@ -4,7 +4,8 @@ import System.IO (hFlush, stdout)
 import Data.List.Split (splitOn)
 import System.Random.Stateful (newStdGen)
 import System.Random.Shuffle (shuffle')
-import Utils (limparTela, larguraTerminal, centralizar)
+import Utils 
+import Navegacao
 import Data.Char (toLower)
 
 data Flashcard = Flashcard {
@@ -38,29 +39,26 @@ gerarIndices max = do
     let indices = [0 .. max - 1]
     return (shuffle' indices max g)
 
-
 iniciarTreino :: [Flashcard] -> IO ()
 iniciarTreino _ = do
     limparTela
-    exibirBanner "../banners/inicio_treino.txt"
+    mostrarLogoCentralizada "../banners/inicio_treino.txt"
+    putStrLn "\nPressione Enter para continuar..."
     _ <- getLine
     todos <- carregarFlashcards
     selecionados <- escolherPerguntasAleatorias 10 todos
     mostrarFlashcards selecionados
     limparTela
-    exibirBanner "../banners/fim_treino.txt"
-    hFlush stdout
-    opcao <- getLine
+ 
+    let opcoes = [ "🎮 Treinar novamente  "
+                 , "🚪 Voltar ao Menu"
+                 ]
+
+    opcao <- escolherOpcaoComTitulo "../banners/fim_treino.txt" opcoes
+
     case opcao of
-        "1" -> iniciarTreino []
+        0 -> iniciarTreino []
         _   -> return ()
-
-
-exibirBanner :: FilePath -> IO ()
-exibirBanner caminho = do
-    conteudo <- readFile caminho
-    putStrLn conteudo
-    return ()
 
 
 mostrarFlashcards :: [Flashcard] -> IO ()

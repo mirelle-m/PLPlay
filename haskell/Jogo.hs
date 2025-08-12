@@ -6,7 +6,7 @@ import Data.Maybe (fromMaybe, isNothing)
 import System.CPUTime (getCPUTime)
 import Text.Read (readMaybe)  
 import Navegacao(escolherOpcao,escolherOpcaoComTitulo)
-import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
+import Utils 
 import System.Random (newStdGen)
 import System.Random.Shuffle (shuffle')
 
@@ -124,6 +124,19 @@ executarMissao progresso nivelEscolhido missaoDesejada = do
       putStrLn ("Nível: " ++ show nivelEscolhido ++ " (máximo " ++ show (maxErrosPermitidos nivelEscolhido) ++ " erros)")
       putStrLn ""
       
+      case missaoDesejada of
+        "5" -> do 
+              putStrLn $ "Batalha dos Fundamentos "
+              mostrarLogoCentralizada "../banners/boss1.txt"
+        "7" -> do
+              putStrLn $ "Guardião da Recursão"
+              mostrarLogoCentralizada "../banners/boss2.txt"
+        "9" -> do
+              putStrLn $ "Mestre da Dedução"
+              mostrarLogoCentralizada "../banners/boss3.txt"
+        _   -> putStrLn "\nPressione Enter para continuar..."
+
+
       _ <- getLine
       
       resultadoMissao <- iniciarQuiz perguntasParaExibir nivelEscolhido missaoDesejada
