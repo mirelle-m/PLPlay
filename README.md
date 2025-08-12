@@ -23,3 +23,11 @@ Para usar o PLPlay é bem simples. Siga os passos abaixo:
 
    ```bash
    ./install.sh
+
+## Equipe
+- Anna Lívia dos Santos Macêdo Costa 
+- Fabiano Victor de França Araújo
+- Luiza Oliveira de Carvalho
+- Mirelle Maria de Oliveira Rocha
+- Tarcísio Araújo de Oliveira
+

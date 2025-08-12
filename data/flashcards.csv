@@ -1,5 +1,2 @@
 pergunta;resposta
-"O que é Haskell?";"Uma linguagem de programação funcional puramente baseada em expressões."
-"Qual extensão padrão de arquivos Haskell?";".hs"
-"O que significa 'puramente funcional' em Haskell?";"Que funções não têm efeitos colaterais e sempre retornam o mesmo resultado para a mesma entrada."
-"Qual é o nome do compilador mais usado para Haskell?";"GHC (Glasgow Haskell Compiler)"
+"Qual LP descrita no documento como a primeira puramente orientada a objetos e dinamicamente tipada e oferece suporte a reflexao?";"Smalltalk"

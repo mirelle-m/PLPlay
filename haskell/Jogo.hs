@@ -6,8 +6,10 @@ import Data.Maybe (fromMaybe, isNothing)
 import System.CPUTime (getCPUTime)
 import Text.Read (readMaybe)  
 import Navegacao(escolherOpcao,escolherOpcaoComTitulo)
-import MapaMissoes
 import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
+import System.Random (newStdGen)
+import System.Random.Shuffle (shuffle')
+
 
 menuJogo :: IO ()
 menuJogo = do
@@ -24,39 +26,39 @@ menuJogo = do
     1 -> novoJogo
     2 -> return()
     _ -> do
-      putStrLn "Opcao invalida! Tentando continuar jogo existente..."
+      putStrLn "Opção inválida! Tentando continuar jogo existente..."
       continuarJogo
 
 continuarJogo :: IO ()
 continuarJogo = do
-  personagem <- carregaPersonagem "personagem.csv"
+  userName <- recuperaLoginAtual
+  usuario <- carregaUsuario userName
   
-  case personagem of
+  case usuario of
     Nothing -> do
-      putStrLn "Nenhum personagem encontrado. Será criado um novo jogo."
+      putStrLn "Nenhum usuário encontrado. Será criado um novo jogo."
       novoJogo
-    Just p -> do
-      putStrLn ("Bem vindo de volta, " ++ nomePersonagem p ++ "!")
-      putStrLn ("Sua missao mais avancada completada: " ++ missaoCompletada p)
-      iniciarQuizLoop p
+    Just u -> do
+      putStrLn ("Bem vindo de volta, " ++ (nomeUsuario u) ++ "!")
+      putStrLn ("Sua missão mais avancada completada: " ++ (progressoUsuario u))
+      iniciarQuizLoop (progressoUsuario u)
 
 novoJogo :: IO ()
 novoJogo = do
-  -- let largura = larguraTerminal
-  -- putStrLn $ replicate largura '='
-  -- putStrLn $ centralizar largura " CRIANDO NOVO PERSONAGEM "
-  -- putStrLn $ replicate largura '='
-  -- putStr "Digite o nome do seu personagem: "
-  nome <- recuperaLoginAtual
-  let novoPersonagem = Personagem nome "1"
-  salvarPersonagem "personagem.csv" novoPersonagem
-  putStrLn ("Personagem " ++ nome ++ " criado! Comecando na missao 1.")
-  iniciarQuizLoop novoPersonagem
+  sucesso <- atualizaProgresso "1"
+  if sucesso
+    then do
+      putStrLn "Começando novo jogo!"
+      iniciarQuizLoop "1"
+    else do
+      putStrLn "Erro ao reiniciar progresso."
+      menuJogo
 
-iniciarQuizLoop :: Personagem -> IO ()
-iniciarQuizLoop personagemAtual = do
+
+iniciarQuizLoop :: String -> IO ()
+iniciarQuizLoop progresso = do
   putStrLn ""
-  putStrLn "Escolha o nivel de dificuldade:"
+  putStrLn "Escolha o nível de dificuldade:"
   putStr "Sua escolha: "
 
   let opcoes = [ "😊 Fácil (pode errar até 3 questões)"
@@ -71,47 +73,53 @@ iniciarQuizLoop personagemAtual = do
           2 -> Dificil
           _ -> Medio
       
-  escolherMissaoMenu personagemAtual nivelEscolhido
+  escolherMissaoMenu progresso nivelEscolhido
 
 filtrarPorIndices :: [Int] -> [a] -> [a]
 filtrarPorIndices indices lista =
     [ lista !! (i - 1) | i <- indices, i > 0, i <= length lista ]
 
-escolherMissaoMenu :: Personagem -> Nivel -> IO ()
-escolherMissaoMenu personagemAtual nivelEscolhido = do
-    let missoesDisponiveis = obterMissoesDisponiveis (missaoCompletada personagemAtual)
+escolherMissaoMenu :: String -> Nivel -> IO ()
+escolherMissaoMenu progresso nivelEscolhido = do
+    let missoesDisponiveis = obterMissoesDisponiveis (progresso)
 
     let opcoes = filtrarPorIndices missoesDisponiveis missoesMapeadasNomes
-    -- Seleção por setas
+    
     indiceMissao <- escolherOpcao "MISSÕES QUE VOCÊ PODE JOGAR BASEADO NO SEU NÍVEL ATUAL:\n" opcoes
 
-    let missaoEscolhida = indiceMissao + 1 -- índice começa em 0, missões começam em 1
+    let missaoEscolhida = indiceMissao + 1 
 
     putStrLn ("\n\nProcessando missão: " ++ show missaoEscolhida)
 
-    -- Chama a função que executa a missão
-    executarMissao personagemAtual nivelEscolhido (show missaoEscolhida)
+    executarMissao progresso nivelEscolhido (show missaoEscolhida)
 
-executarMissao :: Personagem -> Nivel -> String -> IO ()
-executarMissao personagemAtual nivelEscolhido missaoDesejada = do
-  todasAsPerguntas <- carregaPerguntas "quiz_completo.csv"
-  
+shuffle :: [a] -> IO [a]
+shuffle xs = do
+    gen <- newStdGen
+    return $ shuffle' xs (length xs) gen
+
+executarMissao :: String -> Nivel -> String -> IO ()
+executarMissao progresso nivelEscolhido missaoDesejada = do
+  todasAsPerguntas <- carregaPerguntas "../data/perguntas.csv"
+
   let perguntasDaMissao = filter (\p -> missao p == missaoDesejada) todasAsPerguntas
-  
-  let perguntasParaExibir = take 10 perguntasDaMissao
+
+  perguntasEmbaralhadas <- shuffle perguntasDaMissao 
+
+  let perguntasParaExibir = take 10 perguntasEmbaralhadas 
+
   
   if null perguntasParaExibir
     then do
       putStrLn ("Nenhuma pergunta encontrada para a missao " ++ missaoDesejada ++ ".") 
-      menuContinuar "Verifique se o arquivo quiz_completo.csv esta correto." personagemAtual
+      menuContinuar "Verifique se o arquivo ../data/perguntas.csv esta correto." progresso
     else do
       let numPerguntas = length perguntasParaExibir
       let largura = larguraTerminal
       putStrLn $ replicate largura '='
       putStrLn $ centralizar largura (" INICIANDO QUIZ DA MISSÃO " ++ missaoDesejada)
       putStrLn $ replicate largura '='
-      -- putStrLn ("\n--- INICIANDO QUIZ DA MISSÃO " ++ missaoDesejada ++ " ---")
-      putStrLn (show numPerguntas ++ " perguntas selecionadas em ordem sequencial")
+      putStrLn (show numPerguntas ++ " perguntas selecionadas em ordem aleatória")
       putStrLn "Pressione Enter para comecar o quiz..."
       putStrLn ("Nível: " ++ show nivelEscolhido ++ " (máximo " ++ show (maxErrosPermitidos nivelEscolhido) ++ " erros)")
       putStrLn ""
@@ -120,21 +128,23 @@ executarMissao personagemAtual nivelEscolhido missaoDesejada = do
       
       resultadoMissao <- iniciarQuiz perguntasParaExibir nivelEscolhido missaoDesejada
       
-      if resultadoMissao /= "-1" && missaoDesejada == missaoCompletada personagemAtual
+      if resultadoMissao /= "-1" && missaoDesejada == progresso
         then do
-          let novaMissaoCompletada = atualizarProgressoPersonagem missaoDesejada (missaoCompletada personagemAtual)
-          let personagemAtualizado = personagemAtual { missaoCompletada = novaMissaoCompletada }
-          salvarPersonagem "personagem.csv" personagemAtualizado
-          menuContinuar ("\nParabéns 🥳! Você desbloqueou a missão " ++ novaMissaoCompletada ++ "🎉!\n") personagemAtualizado
+          case somaProgresso progresso of
+            Just missaoAtual -> do
+              atualizaProgresso missaoAtual
+              menuContinuar ("\nParabéns 🥳! Você desbloqueou a missão " ++ missaoAtual ++ "🎉!\n") missaoAtual
+            Nothing -> do
+              putStrLn "Erro: progresso inválido."
         else if resultadoMissao == "-1"
           then do
             _ <- getLine
-            menuContinuar "\nVocê falhou na missão 😢. Tente novamente!\n" personagemAtual
+            menuContinuar "\nVocê falhou na missão 😢. Tente novamente!\n" progresso
           else do
-            menuContinuar "\nMissão repetida concluida! 🎈\n" personagemAtual
+            menuContinuar "\nMissão repetida concluida! 🎈\n" progresso
 
-menuContinuar :: String -> Personagem -> IO ()
-menuContinuar titulo personagem = do
+menuContinuar :: String -> String -> IO ()
+menuContinuar titulo progresso = do
     let opcoes =
             [ "🎮 Continuar jogando"
             , "🏠 Voltar ao menu principal"
@@ -144,7 +154,13 @@ menuContinuar titulo personagem = do
     escolha <- escolherOpcao (titulo ++ "======== O QUE DESEJA FAZER? ========") opcoes
 
     case escolha of
-        0 -> iniciarQuizLoop personagem
+        0 -> iniciarQuizLoop progresso
         1 -> menuJogo
         2 -> putStrLn "Obrigado por jogar!"
-        _ -> menuContinuar "" personagem 
+        _ -> menuContinuar "" progresso 
+
+somaProgresso :: String -> Maybe String
+somaProgresso s = do
+  valor <- readMaybe s :: Maybe Int
+  let resultado = valor + 1
+  return (show resultado)

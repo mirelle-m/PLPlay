@@ -5,11 +5,10 @@ import Control.Exception
 import Data.Char (isAlphaNum, isDigit, isLower, isUpper)
 import Data.List (isInfixOf)
 import Data.Typeable (Typeable)
-import MapaMissoes (escolherMissao, imprimirMapa)
 import Menu (menuPrincipal)
 import Navegacao (escolherOpcaoComTitulo)
 import System.Directory (doesFileExist)
-import Utils (carregarLogo, centralizar, limparTela, larguraTerminal)
+import Utils (carregarLogo, centralizar, limparTela, larguraTerminal,mostrarLogoCentralizada)
 import Usuario
 
 loopAutenticacao :: IO ()
@@ -50,9 +49,7 @@ validarSenha senha
 autenticarUsuario :: IO Bool
 autenticarUsuario = do
   let largura = larguraTerminal
-  putStrLn $ replicate largura '='
-  putStrLn $ centralizar largura "🔐 AUTENTICAÇÃO"
-  putStrLn $ replicate largura '='
+  mostrarLogoCentralizada "../banners/autenticacao.txt" 
   putStrLn "Digite seu username:"
   username <- getLine
   case validarUsername username of

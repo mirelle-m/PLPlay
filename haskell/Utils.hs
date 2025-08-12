@@ -1,5 +1,5 @@
 
-module Utils (centralizar, limparTela, limparTelaCompleta, carregarLogo, larguraTerminal, alturaTerminal, mostrarLogoCentralizada, removeAspas, adicionaAspas) where
+module Utils where
 
 import qualified Terminal
 import System.IO.Unsafe (unsafeDupablePerformIO)
@@ -50,14 +50,6 @@ mostrarLogoCentralizada :: FilePath -> IO ()
 mostrarLogoCentralizada caminho = do
   linhas <- fmap lines (readFile caminho)
   mapM_ putStrLn (centralizarBloco larguraTerminal linhas)
-
-
-
-exibirBanner :: FilePath -> IO ()
-exibirBanner caminho = do
-    conteudo <- readFile caminho
-    putStrLn conteudo
-    return ()
 
 
 removeAspas :: String -> String

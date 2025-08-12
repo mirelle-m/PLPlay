@@ -3,7 +3,7 @@ module Missoes where
 import System.IO (appendFile)
 import Data.Char (toLower)
 import Text.Read (readMaybe)  
-import Utils (larguraTerminal, limparTela, removeAspas, adicionaAspas)
+import Utils
 import Usuario
 import Data.List.Split (splitOn)
 import Data.Function (on)
@@ -40,7 +40,7 @@ parseLinha :: String -> Pergunta
 parseLinha linha =
   let colunas = map removeAspas (splitOn ";" linha)
   in Pergunta
-    { id_questao = colunas !! 0, 
+    { id_questao = colunas !! 0,
       missao = colunas !! 1,
       pergunta = colunas !! 2,
       alternativa_certa = colunas !! 3,
@@ -134,9 +134,9 @@ podeContinuar numErros nivelEscolhido = numErros < maxErrosPermitidos nivelEscol
 
 exibirResumo :: ResultadoQuiz -> IO ()
 exibirResumo resultado = do
-    limparTela    
+    limparTela
     let numErros = length (erros resultado)
-    let nivelAtual = nivel resultado    
+    let nivelAtual = nivel resultado
     if numErros >= maxErrosPermitidos nivelAtual
         then do
             putStrLn $ replicate larguraTerminal '-'
@@ -147,18 +147,18 @@ exibirResumo resultado = do
         else do
             putStrLn $ replicate larguraTerminal '-'
             putStrLn "        MISSÃO CONCLUIDA!         "
-            putStrLn $ replicate larguraTerminal '-'    
+            putStrLn $ replicate larguraTerminal '-'
     putStrLn ("Nível escolhido: " ++ show nivelAtual)
     putStrLn ("Total de acertos: " ++ show (length (acertos resultado)))
     putStrLn ("Total de erros: " ++ show numErros)
-    putStrLn ""    
+    putStrLn ""
     if not (null (acertos resultado))
         then do
             putStrLn "PERGUNTAS QUE VOCÊ ACERTOU:"
             putStrLn $ replicate larguraTerminal '-'
             mapM_ exibirResumoPerguntas (reverse (acertos resultado))
             putStrLn ""
-        else putStrLn "Nenhuma pergunta foi acertada.\n"    
+        else putStrLn "Nenhuma pergunta foi acertada.\n"
     if not (null (erros resultado))
         then do
             putStrLn "PERGUNTAS QUE VOCÊ ERROU:"
@@ -177,7 +177,8 @@ exibirResumoPerguntas p = do
 
 verificarMissaoValida :: String -> String -> Bool
 verificarMissaoValida missaoEscolhida missaoCompletadaAtual =
-    case (readMaybe (filter (/= ' ') missaoEscolhida) :: Maybe Int, readMaybe missaoCompletadaAtual :: Maybe Int) of
+    let missaoLimpa = filter (/= ' ') missaoEscolhida  
+    in case (readMaybe missaoLimpa :: Maybe Int, readMaybe missaoCompletadaAtual :: Maybe Int) of
         (Just escolhida, Just completada) -> escolhida >= 1 && escolhida <= completada
         _ -> False
 
@@ -189,23 +190,13 @@ obterMissoesDisponiveis missaoCompletada =
         Nothing                  -> [1]
 
 
-atualizarProgressoPersonagem :: String -> String -> String
-atualizarProgressoPersonagem missaoAtual missaoCompletada =
-    case (readMaybe missaoAtual :: Maybe Int, readMaybe missaoCompletada :: Maybe Int) of
-        (Just missaoAtualNum, Just missaoCompletadaNum) ->
-            if missaoAtualNum == missaoCompletadaNum
-               then show (missaoAtualNum + 1)
-               else missaoCompletada
-        _ -> missaoCompletada
-
-
 iniciarQuiz :: [Pergunta] -> Nivel -> String -> IO String
 iniciarQuiz perguntas nivelEscolhido missaoAtual = do
     putStrLn "Iniciando o quiz..."
-    resultado <- executarQuiz perguntas (ResultadoQuiz [] [] nivelEscolhido)    
-    exibirResumo resultado    
+    resultado <- executarQuiz perguntas (ResultadoQuiz [] [] nivelEscolhido)
+    exibirResumo resultado
     let numErros = length (erros resultado)
-    let nivelAtual = nivel resultado    
+    let nivelAtual = nivel resultado
     if numErros < maxErrosPermitidos nivelAtual && not (null perguntas)
         then return missaoAtual  
         else return "-1"  
@@ -214,7 +205,7 @@ iniciarQuiz perguntas nivelEscolhido missaoAtual = do
 executarQuiz :: [Pergunta] -> ResultadoQuiz -> IO ResultadoQuiz
 executarQuiz [] resultado = return resultado
 executarQuiz (h:t) resultado = do
-    let numErros = length (erros resultado)    
+    let numErros = length (erros resultado)
     if not (podeContinuar numErros (nivel resultado))
         then do
             limparTela
@@ -226,10 +217,10 @@ executarQuiz (h:t) resultado = do
             putStrLn ("Acertos: " ++ show (length (acertos resultado)) ++
                      " | Erros: " ++ show numErros ++ "/" ++ show (maxErrosPermitidos (nivel resultado)))
             putStrLn ""
-            exibirPergunta h            
-            putStr "Escolha uma alternativa: "
-            alternativa_usuario <- getLine            
-            if compararAcertouErrou alternativa_usuario (alternativa_certa h)
+            exibirPergunta h
+            alternativa_usuario <- captura_alternativa
+            let comparacao = compararAcertouErrou alternativa_usuario (alternativa_certa h)
+            if comparacao
                 then do
                     putStrLn "Parabéns! Você acertou!!!"
                     salvarRespostaAcertada h
@@ -239,6 +230,35 @@ executarQuiz (h:t) resultado = do
                     putStrLn ("Ops... não foi dessa vez! A resposta correta era: " ++ alternativa_certa h)
                     let novoResultado = resultado { erros = h : erros resultado }
                     opcaoSalvarTreino h t novoResultado
+
+
+captura_alternativa :: IO String
+captura_alternativa = do
+    let validas = ["a", "b", "c", "d", "e"]
+    putStr "Escolha uma alternativa (a, b, c, d, e): "
+    alternativa <- getLine
+    if alternativa `elem` validas
+        then return alternativa
+        else do
+            putStrLn "Opção inválida. Tente novamente.\n"
+            captura_alternativa
+
+
+missoesMapeadasNomes :: [String]
+missoesMapeadasNomes = ["🧭 Missão 1: Introdução - Históricos e Características"
+      ,"🧭 Missão 2: Classificação e Características"
+      ,"🧭 Missão 3: Valores, Tipos e Sistema de Tipos"
+      ,"🧭 Missão 4: Paradigma Imperativo"
+      ,"👾 Chefão 5: Batalha dos Fundamentos"
+      ,"🧭 Missão 6: Paradigma Funcional"
+      ,"👾 Chefão 7: Guardião da Recursão"
+      ,"🧭 Missão 8: Paradigma Lógico"
+      ,"👾 Chefão 9: Mestre da Dedução"]
+
+
+imprimirMapa :: IO ()
+imprimirMapa = do
+  mostrarLogoCentralizada "../banners/mapa.txt"
 
 
 opcaoSalvarTreino :: Pergunta -> [Pergunta] -> ResultadoQuiz -> IO ResultadoQuiz
