@@ -15,7 +15,6 @@
 ║           🟡 Médio: até 2 erros                                                           ║
 ║           🔴 Difícil: 1 erro"                                                             ║
 ║       💥 Se ultrapassar o limite, a missão reinicia do zero                               ║
-║       🏆 Vença chefões e conquiste medalhas com seu desempenho                            ║
 ║       📚 Revise perguntas erradas no modo Treino (flashcards)                             ║
 ║       📈 Aprenda jogando e avance até o final da jornada!                                 ║
 ║                                                                                           ║
