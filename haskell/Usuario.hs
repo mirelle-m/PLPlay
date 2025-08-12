@@ -48,7 +48,6 @@ recuperaLoginAtual = do
     _ <- evaluate (length conteudo)
     return (filter (/= '\n') conteudo)
 
-
 atualizaProgresso :: String -> IO Bool
 atualizaProgresso novoValor = do
     let caminho =  "../data/usuarios.csv"

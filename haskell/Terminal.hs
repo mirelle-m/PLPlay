@@ -21,10 +21,8 @@ instance Storable WinSize where
     ((\hsc_ptr -> pokeByteOff hsc_ptr 0)) ptr row
     ((\hsc_ptr -> pokeByteOff hsc_ptr 2)) ptr col
 
-
 foreign import ccall "sys/ioctl.h ioctl"
   ioctl :: CInt -> CInt -> Ptr WinSize -> IO CInt
-
 
 getTermSize :: IO (Int, Int)
 getTermSize = 
