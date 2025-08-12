@@ -40,7 +40,7 @@ doesFileExist _ = return True
 
 parseLinha :: String -> Pergunta
 parseLinha linha =
-  let colunas = map removeAspas (splitOn ',' linha)
+  let colunas = map removeAspas (splitOn ';' linha)
   in Pergunta
     { idQuestao = colunas !! 0
     , missao = colunas !! 1
