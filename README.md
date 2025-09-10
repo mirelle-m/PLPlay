@@ -12,7 +12,7 @@ PLPlay é um sistema de gamificação para facilitar o aprendizado da disciplina
 - Progresso salvo, para continuar o jogo posteriormente.
 - Modo treino (flashcards) para revisão focada nas perguntas que o jogador deseja reforçar.
 
-## Guia de Instalação
+## Guia de Instalação Haskell
 Para usar o PLPlay é bem simples. Siga os passos abaixo:
 
 1. Clone o repositório:
@@ -24,6 +24,12 @@ Para usar o PLPlay é bem simples. Siga os passos abaixo:
    ```bash
    ./install.sh
 
+## Guia de para Inicialização do Jogo
+1. Clone o repositório:
+
+   ```bash
+   https://github.com/mirelle-m/PLPlay.git
+   
 ## Equipe
 - Anna Lívia dos Santos Macêdo Costa 
 - Fabiano Victor de França Araújo
