@@ -2,15 +2,24 @@
     menu_principal/0
 ]).
 
-:- use_module(inicial).      % para mostrar banner inicial
-:- use_module(flashcard).    % para iniciarTreino
-:- use_module(jogo).         % para menuJogo
-:- use_module(missoes).      % para imprimirMapa
-:- use_module(utils).        % para limparTelaCompleta, mostrarLogoCentralizada
-:- use_module(navegacao).    % escolherOpcaoComTitulo
-:- use_module(utils).
+:- use_module(inicial).      
+:- use_module(flashcard).    
+:- use_module(jogo).         
+:- use_module(missoes).      
+:- use_module(utils, [
+    limpar_tela/0,
+    limpar_tela_completa/0,
+    mostrar_logo_centralizada/1,
+    mostrar_banner/1
+]).
+
+:- use_module(navegacao).    
+:- use_module(auth).         
 
 menu_principal :-
+    login_corrente(User),                  
+    limpar_tela_completa,
+    format("👤 Usuário: ~w~n~n", [User]),  
     Opcoes = [
         "🎮 Jogar",
         "📰 Ver Regras do Jogo",
@@ -26,24 +35,30 @@ executar_opcao(0) :-
     writeln("Iniciando novo jogo..."),
     menu_jogo,
     menu_principal.
+
 executar_opcao(1) :-
     limpar_tela_completa,
-    mostrar_logo_centralizada('../banners/regras.txt'),
+    mostrar_banner('../banners/regras.txt'),
     writeln("\nPressione Enter para voltar ao menu..."),
     read_line_to_string(user_input, _),
     menu_principal.
+
 executar_opcao(2) :-
     limpar_tela_completa,
-    imprimir_mapa,
+    mostrar_banner('../banners/mapa.txt'),
     writeln("\nPressione Enter para voltar ao menu..."),
     read_line_to_string(user_input, _),
     menu_principal.
+
 executar_opcao(3) :-
     writeln("Modo Treino"),
     iniciar_treino([]),
     menu_principal.
+
 executar_opcao(4) :-
+    salvar_login_atual,   % Persiste o login atual ao sair
     writeln("Saindo do jogo... Até a próxima! 👋").
+
 executar_opcao(_) :-
     writeln("Opção inválida."),
     menu_principal.
