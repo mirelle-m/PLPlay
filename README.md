@@ -24,7 +24,7 @@ Para usar o PLPlay é bem simples. Siga os passos abaixo:
    ```bash
    ./install.sh
 
-## Guia de para Inicialização do Jogo
+## Guia de para Inicialização do Jogo Prolog
 1. Clone o repositório:
 
    ```bash
