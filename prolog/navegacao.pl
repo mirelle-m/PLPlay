@@ -6,15 +6,14 @@
 :- use_module(utils).
 
 % ----------------------
-% Configuração terminal
+% Wrapper que coloca o terminal em modo raw enquanto Action executa.
+% with_tty_raw/1 garante restauração do estado do terminal. (SWI-Prolog)
 % ----------------------
 configs_temporarias_terminal(Action) :-
-    tty_get_mode(user_input, OldMode),
-    tty_raw(user_input),
-    call_cleanup(Action, tty_set_mode(user_input, OldMode)).
+    with_tty_raw(Action).    % built-in SWI-Prolog; lê sem echo e sem esperar CR. 
 
 % ----------------------
-% Exibir opção
+% Exibir uma opção (-> quando selecionada)
 % ----------------------
 exibir_opcao(Index, Texto, Selected, Linha) :-
     ( Index =:= Selected ->
@@ -22,59 +21,68 @@ exibir_opcao(Index, Texto, Selected, Linha) :-
     ;   string_concat("   ", Texto, Linha)
     ).
 
+% Imprime lista de opções com índice começando em 0
+print_options(Opcoes, Selected) :-
+    print_options(Opcoes, 0, Selected).
+
+print_options([], _, _).
+print_options([T|Ts], I, Sel) :-
+    exibir_opcao(I, T, Sel, Line),
+    writeln(Line),
+    I1 is I + 1,
+    print_options(Ts, I1, Sel).
+
 % ----------------------
-% Escolher com logo
+% Escolher opção mostrando logo (arquivo)
 % ----------------------
 escolher_opcao_com_titulo(Path, Opcoes, Escolhida) :-
-    configs_temporarias_terminal(
-        escolher_loop(Path, Opcoes, 0, Escolhida)
-    ).
+    configs_temporarias_terminal(escolher_loop(Path, Opcoes, 0, Escolhida)).
 
 escolher_loop(Path, Opcoes, Sel, Escolhida) :-
     length(Opcoes, N),
     utils:limpar_tela_completa,
     utils:mostrar_logo_centralizada(Path),
-    forall(nth0(I, Opcoes, Texto),
-           ( exibir_opcao(I, Texto, Sel, Linha),
-             writeln(Linha) )),
+    print_options(Opcoes, Sel),
     get_key(Key),
-    ( Key = up    -> Sel1 is (Sel - 1 + N) mod N, escolher_loop(Path, Opcoes, Sel1, Escolhida)
-    ; Key = down  -> Sel1 is (Sel + 1) mod N, escolher_loop(Path, Opcoes, Sel1, Escolhida)
-    ; Key = enter -> Escolhida = Sel
-    ; escolher_loop(Path, Opcoes, Sel, Escolhida)
+    ( Key == up    -> Sel1 is (Sel - 1 + N) mod N, escolher_loop(Path, Opcoes, Sel1, Escolhida)
+    ; Key == down  -> Sel1 is (Sel + 1) mod N, escolher_loop(Path, Opcoes, Sel1, Escolhida)
+    ; Key == enter -> Escolhida = Sel
+    ;               escolher_loop(Path, Opcoes, Sel, Escolhida)
     ).
 
 % ----------------------
-% Escolher com título
+% Escolher opção mostrando título (string)
 % ----------------------
 escolher_opcao(Titulo, Opcoes, Escolhida) :-
-    configs_temporarias_terminal(
-        escolher_loop_titulo(Titulo, Opcoes, 0, Escolhida)
-    ).
+    configs_temporarias_terminal(escolher_loop_titulo(Titulo, Opcoes, 0, Escolhida)).
 
 escolher_loop_titulo(Titulo, Opcoes, Sel, Escolhida) :-
     length(Opcoes, N),
     utils:limpar_tela_completa,
     writeln(Titulo),
-    forall(nth0(I, Opcoes, Texto),
-           ( exibir_opcao(I, Texto, Sel, Linha),
-             writeln(Linha) )),
+    print_options(Opcoes, Sel),
     get_key(Key),
-    ( Key = up    -> Sel1 is (Sel - 1 + N) mod N, escolher_loop_titulo(Titulo, Opcoes, Sel1, Escolhida)
-    ; Key = down  -> Sel1 is (Sel + 1) mod N, escolher_loop_titulo(Titulo, Opcoes, Sel1, Escolhida)
-    ; Key = enter -> Escolhida = Sel
-    ; escolher_loop_titulo(Titulo, Opcoes, Sel, Escolhida)
+    ( Key == up    -> Sel1 is (Sel - 1 + N) mod N, escolher_loop_titulo(Titulo, Opcoes, Sel1, Escolhida)
+    ; Key == down  -> Sel1 is (Sel + 1) mod N, escolher_loop_titulo(Titulo, Opcoes, Sel1, Escolhida)
+    ; Key == enter -> Escolhida = Sel
+    ;               escolher_loop_titulo(Titulo, Opcoes, Sel, Escolhida)
     ).
 
-
+% ----------------------
+% Captura de tecla usando get_single_char/1
+% Retorna um dos atoms: up, down, enter, other
+% - setas geralmente chegam como ESC '[' <A/B/...> (códigos 27,91,65/66)
+% - ENTER: 13 (CR) ou 10 (LF)
+% ----------------------
 get_key(Key) :-
-    get_char(C1),
-    ( C1 = '\e' ->               % ESC
-        get_char(_C2),
-        get_char(C3),
-        ( C3 = 'A' -> Key = up
-        ; C3 = 'B' -> Key = down
+    get_single_char(C1),            % retorna código do char (inteiro)
+    ( C1 =:= 27 ->                  % ESC
+        get_single_char(_C2),       % normalmente '[' (91)
+        get_single_char(C3),
+        ( C3 =:= 65 -> Key = up
+        ; C3 =:= 66 -> Key = down
         ; Key = other )
-    ; ( C1 = '\r' ; C1 = '\n' ) -> Key = enter
+    ; C1 =:= 13 -> Key = enter      % CR
+    ; C1 =:= 10 -> Key = enter      % LF
     ; Key = other
     ).
