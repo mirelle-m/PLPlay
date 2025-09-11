@@ -6,7 +6,9 @@
     centralizar_bloco/3,
     mostrar_logo_centralizada/1,
     remove_aspas/2,
-    adiciona_aspas/2
+    adiciona_aspas/2,
+    pressionar_enter/0,
+    get_single_char/1
 ]).
 
 mostrar_banner(Caminho) :-
@@ -80,3 +82,39 @@ terminal_largura(Width) :-
     (current_prolog_flag(tty_control, true) ->
         getenv("COLUMNS", S), number_string(Width, S)
     ; Width = 80).  % valor padrão
+
+get_single_char(Char) :-
+    shell('stty raw -echo', _),
+    get_code(Code),
+    shell('stty -raw echo', _),
+    (   Code == 27 -> % Sequência de Escape (setas)
+        get_code(91),
+        get_code(ArrowCode),
+        (   ArrowCode == 65 -> Char = 'A' ; % Cima
+            ArrowCode == 66 -> Char = 'B' ; % Baixo
+            ArrowCode == 67 -> Char = 'C' ; % Direita
+            ArrowCode == 68 -> Char = 'D'   % Esquerda
+        )
+    ;   Code == 13 -> % Tecla Enter
+        Char = '\r'
+    ;
+        char_code(Char, Code) % Outras teclas
+    ).
+
+pressionar_enter :-
+    writeln("\nPressione Enter para continuar..."),
+    read_line_to_string(user_input, _).
+
+testar_teclado :-
+    writeln('--- Teste de Teclado ---'),
+    writeln('Pressione as setas ou qualquer tecla. Pressione "q" para sair.'),
+    loop_teste_teclado.
+
+loop_teste_teclado :-
+    get_code(Code),
+    format('Código recebido: ~w\n', [Code]),
+    (   char_code('q', Code) ->
+        writeln('--- Fim do Teste ---')
+    ;
+        loop_teste_teclado
+    ).
