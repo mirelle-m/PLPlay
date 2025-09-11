@@ -3,7 +3,6 @@ module Navegacao (escolherOpcaoComTitulo,escolherOpcao) where
 import System.IO
 import Data.Char (ord)
 import Control.Monad (when)
-
 import Utils (centralizar, larguraTerminal, limparTela, limparTelaCompleta, mostrarLogoCentralizada)
 
 configsTemporariasTerminal :: IO a -> IO a
@@ -40,7 +39,6 @@ escolherOpcaoComTitulo path opcoes = configsTemporariasTerminal $ go 0
                 then putStrLn $ "-> " ++ texto
                 else putStrLn $ "   " ++ texto
 
-
 escolherOpcao :: String -> [String] -> IO Int
 escolherOpcao titulo opcoes = configsTemporariasTerminal $ go 0
   where
@@ -66,9 +64,7 @@ escolherOpcao titulo opcoes = configsTemporariasTerminal $ go 0
                 then putStrLn $ "-> " ++ texto
                 else putStrLn $ "   " ++ texto
 
-
 data Key = ArrowUp | ArrowDown | Enter | Other deriving (Show, Eq)
-
 
 getKey :: IO String
 getKey = do

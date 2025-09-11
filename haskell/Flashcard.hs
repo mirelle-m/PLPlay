@@ -13,14 +13,12 @@ data Flashcard = Flashcard {
     resposta :: String
 } deriving (Show)
 
-
 carregarFlashcards :: IO [Flashcard]
 carregarFlashcards = do
     conteudo <- readFile "../data/flashcards.csv"
     let linhas = tail . lines $ conteudo
     let flashcards = [ Flashcard p r | linha <- linhas, let conjuntos = splitOn ";" linha, [p, r] <- [conjuntos] ]
     return flashcards
-
 
 escolherPerguntasAleatorias :: Int -> [a] -> IO [a]
 escolherPerguntasAleatorias n lista = do
@@ -31,7 +29,6 @@ escolherPerguntasAleatorias n lista = do
             indices <- gerarIndices len
             let indicesAleatorios = take n indices
             return [lista !! i | i <- indicesAleatorios]
-
 
 gerarIndices :: Int -> IO [Int]
 gerarIndices max = do
@@ -59,7 +56,6 @@ iniciarTreino _ = do
     case opcao of
         0 -> iniciarTreino []
         _   -> return ()
-
 
 mostrarFlashcards :: [Flashcard] -> IO ()
 mostrarFlashcards [] = return ()

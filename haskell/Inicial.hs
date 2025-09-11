@@ -17,7 +17,6 @@ mostrarLogoAnimada caminho = do
       threadDelay 100000
       mostrarLinhas ls
 
-
 paginaInicial :: IO ()
 paginaInicial = do
   mostrarLogoAnimada "../banners/plplay.txt"

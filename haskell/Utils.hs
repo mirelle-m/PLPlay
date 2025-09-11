@@ -14,28 +14,23 @@ centralizar largura texto =
     let espacos = replicate ((largura - length texto) `div` 2) ' '
     in espacos ++ texto
 
-
 limparTela :: IO ()
 limparTela = do 
               putStr "\ESC[2J\ESC[H"
               hFlush stdout
-
 
 limparTelaCompleta :: IO ()
 limparTelaCompleta = do
   putStr "\ESC[3J\ESC[2J\ESC[H"
   hFlush stdout
 
-
 preencherDireita :: Int -> String -> String
 preencherDireita n s = s ++ replicate (n - length s) ' '
-
 
 carregarLogo :: FilePath -> IO [String]
 carregarLogo caminho = do
   conteudo <- readFile caminho
   return (lines conteudo)
-
 
 centralizarBloco :: Int -> [String] -> [String]
 centralizarBloco largura linhas =
@@ -45,18 +40,15 @@ centralizarBloco largura linhas =
       espacos = replicate deslocamento ' '
   in map (espacos ++) padded
 
-
 mostrarLogoCentralizada :: FilePath -> IO ()
 mostrarLogoCentralizada caminho = do
   linhas <- fmap lines (readFile caminho)
   mapM_ putStrLn (centralizarBloco larguraTerminal linhas)
 
-
 removeAspas :: String -> String
 removeAspas str
   | length str >= 2 && head str == '"' && last str == '"' = init (tail str)
   | otherwise = str
-
 
 adicionaAspas :: String -> String
 adicionaAspas str = "\"" ++ str ++ "\""

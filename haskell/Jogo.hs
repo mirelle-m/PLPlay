@@ -1,4 +1,5 @@
 module Jogo where
+
 import Missoes
 import Usuario
 import Data.List (filter, take)
@@ -9,7 +10,6 @@ import Navegacao(escolherOpcao,escolherOpcaoComTitulo)
 import Utils 
 import System.Random (newStdGen)
 import System.Random.Shuffle (shuffle')
-
 
 menuJogo :: IO ()
 menuJogo = do
@@ -53,7 +53,6 @@ novoJogo = do
     else do
       putStrLn "Erro ao reiniciar progresso."
       menuJogo
-
 
 iniciarQuizLoop :: String -> IO ()
 iniciarQuizLoop progresso = do
@@ -135,7 +134,6 @@ executarMissao progresso nivelEscolhido missaoDesejada = do
               putStrLn $ "Mestre da Dedução"
               mostrarLogoCentralizada "../banners/boss3.txt"
         _   -> putStrLn "\nPressione Enter para continuar..."
-
 
       _ <- getLine
       

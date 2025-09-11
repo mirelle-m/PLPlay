@@ -35,7 +35,6 @@ validarUsername nome
   | not (all (\c -> isAlphaNum c || c == '_') nome) = Left "Nome de usuário só pode conter letras, números e underscore (_)."
   | otherwise = Right ()
 
-
 validarSenha :: String -> Either String ()
 validarSenha senha
   | null senha = Left "Senha não pode ser vazia."
@@ -44,7 +43,6 @@ validarSenha senha
   | not (any isLower senha) = Left "Senha deve conter ao menos uma letra minúscula."
   | not (any isDigit senha) = Left "Senha deve conter ao menos um número."
   | otherwise = Right ()
-
 
 autenticarUsuario :: IO Bool
 autenticarUsuario = do

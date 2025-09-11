@@ -35,7 +35,6 @@ carregaPerguntas caminho = do
     let linhas = tail (lines conteudo)
     return (map parseLinha linhas)
 
-
 parseLinha :: String -> Pergunta
 parseLinha linha =
   let colunas = map removeAspas (splitOn ";" linha)
@@ -50,7 +49,6 @@ parseLinha linha =
       texto_alternativa_d = colunas !! 7,
       texto_alternativa_e = colunas !! 8
     }
-
 
 exibirPergunta :: Pergunta -> IO ()
 exibirPergunta p = do
@@ -74,14 +72,11 @@ textoRespostaCorreta p = case map toLower (alternativa_certa p) of
   "e" -> texto_alternativa_e p
   _   -> "Alternativa correta inválida"
 
-
 normalizarResposta :: String -> String
 normalizarResposta = map toLower . filter (/= ' ')
 
-
 compararAcertouErrou :: String -> String -> Bool
 compararAcertouErrou = (==) `on` normalizarResposta
-
 
 transformarEmCSV :: Pergunta -> String
 transformarEmCSV p =
@@ -97,22 +92,18 @@ transformarEmCSV p =
         texto_alternativa_e p
       ]
 
-
 transformarEmFlashcard :: Pergunta -> String
 transformarEmFlashcard p =
   intercalate ";" $ map adicionaAspas
     [ pergunta p, textoRespostaCorreta p ]
 
-
 salvarRespostaAcertada :: Pergunta -> IO ()
 salvarRespostaAcertada pergunta =
     appendFile "../data/acertos.csv" ("\n" ++ transformarEmCSV pergunta)
 
-
 salvarQuestoesParaTreino :: Pergunta -> IO ()
 salvarQuestoesParaTreino pergunta =
     appendFile "../data/flashcards.csv" ("\n" ++ transformarEmFlashcard pergunta)
-
 
 stringParaNivel :: String -> Maybe Nivel
 stringParaNivel s
@@ -121,16 +112,13 @@ stringParaNivel s
   | normalizarResposta s == "dificil" || s == "3" = Just Dificil
   | otherwise = Nothing
 
-
 maxErrosPermitidos :: Nivel -> Int
 maxErrosPermitidos Facil = 3
 maxErrosPermitidos Medio = 2
 maxErrosPermitidos Dificil = 1
 
-
 podeContinuar :: Int -> Nivel -> Bool
 podeContinuar numErros nivelEscolhido = numErros < maxErrosPermitidos nivelEscolhido
-
 
 exibirResumo :: ResultadoQuiz -> IO ()
 exibirResumo resultado = do
@@ -166,14 +154,12 @@ exibirResumo resultado = do
             mapM_ exibirResumoPerguntas (reverse (erros resultado))
         else putStrLn "Parabéns! Você não errou nenhuma pergunta!"
 
-
 exibirResumoPerguntas :: Pergunta -> IO ()
 exibirResumoPerguntas p = do
     putStrLn ("ID: " ++ id_questao p)
     putStrLn ("Pergunta: " ++ pergunta p)
     putStrLn ("Resposta correta: " ++ alternativa_certa p)
     putStrLn "---"
-
 
 verificarMissaoValida :: String -> String -> Bool
 verificarMissaoValida missaoEscolhida missaoCompletadaAtual =
@@ -182,13 +168,11 @@ verificarMissaoValida missaoEscolhida missaoCompletadaAtual =
         (Just escolhida, Just completada) -> escolhida >= 1 && escolhida <= completada
         _ -> False
 
-
 obterMissoesDisponiveis :: String -> [Int]
 obterMissoesDisponiveis missaoCompletada =
     case readMaybe missaoCompletada :: Maybe Int of
         Just missaoCompletadaNum -> [1 .. missaoCompletadaNum]
         Nothing                  -> [1]
-
 
 iniciarQuiz :: [Pergunta] -> Nivel -> String -> IO String
 iniciarQuiz perguntas nivelEscolhido missaoAtual = do
@@ -202,7 +186,6 @@ iniciarQuiz perguntas nivelEscolhido missaoAtual = do
     if numErros < maxErrosPermitidos nivelAtual && not (null perguntas)
         then return missaoAtual  
         else return "-1"  
-
 
 executarQuiz :: [Pergunta] -> ResultadoQuiz -> IO ResultadoQuiz
 executarQuiz [] resultado = return resultado
@@ -220,7 +203,7 @@ executarQuiz (h:t) resultado = do
                      " | Erros: " ++ show numErros ++ "/" ++ show (maxErrosPermitidos (nivel resultado)))
             putStrLn ""
             exibirPergunta h
-            alternativa_usuario <- captura_alternativa
+            alternativa_usuario <- capturaAlternativa
             let comparacao = compararAcertouErrou alternativa_usuario (alternativa_certa h)
             if comparacao
                 then do
@@ -233,9 +216,8 @@ executarQuiz (h:t) resultado = do
                     let novoResultado = resultado { erros = h : erros resultado }
                     opcaoSalvarTreino h t novoResultado
 
-
-captura_alternativa :: IO String
-captura_alternativa = do
+capturaAlternativa :: IO String
+capturaAlternativa = do
     let validas = ["a", "b", "c", "d", "e"]
     putStr "Escolha uma alternativa (a, b, c, d, e): "
     alternativa <- getLine
@@ -243,8 +225,7 @@ captura_alternativa = do
         then return alternativa
         else do
             putStrLn "Opção inválida. Tente novamente.\n"
-            captura_alternativa
-
+            capturaAlternativa
 
 missoesMapeadasNomes :: [String]
 missoesMapeadasNomes = ["🧭 Missão 1: Introdução - Históricos e Características"
@@ -257,11 +238,9 @@ missoesMapeadasNomes = ["🧭 Missão 1: Introdução - Históricos e Caracterí
       ,"🧭 Missão 8: Paradigma Lógico"
       ,"👾 Chefão 9: Mestre da Dedução"]
 
-
 imprimirMapa :: IO ()
 imprimirMapa = do
   mostrarLogoCentralizada "../banners/mapa.txt"
-
 
 opcaoSalvarTreino :: Pergunta -> [Pergunta] -> ResultadoQuiz -> IO ResultadoQuiz
 opcaoSalvarTreino pergunta restoPerguntas resultadoAtual = do
