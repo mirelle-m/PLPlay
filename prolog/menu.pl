@@ -52,7 +52,7 @@ executar_opcao(2) :-
 
 executar_opcao(3) :-
     writeln("Modo Treino"),
-    iniciar_treino([]),
+    iniciar_treino(),
     menu_principal.
 
 executar_opcao(4) :-
