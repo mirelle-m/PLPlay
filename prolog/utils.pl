@@ -1,5 +1,5 @@
 :- module(utils, [
-    mostrar_banner/0,
+    mostrar_banner/1,
     limpar_tela/0,
     limpar_tela_completa/0,
     centralizar/3,

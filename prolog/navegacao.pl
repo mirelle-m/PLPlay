@@ -1,88 +1,108 @@
-:- module(navegacao, [
-    escolher_opcao_com_titulo/3,
-    escolher_opcao/3
-]).
+:- module(navegacao, [escolher_opcao/3, escolher_opcao_titulo/3]).
 
-:- use_module(utils).
+:- use_module(library(readutil)).  % para limpar entrada se precisar
 
-% ----------------------
-% Wrapper que coloca o terminal em modo raw enquanto Action executa.
-% with_tty_raw/1 garante restauração do estado do terminal. (SWI-Prolog)
-% ----------------------
-configs_temporarias_terminal(Action) :-
-    with_tty_raw(Action).    % built-in SWI-Prolog; lê sem echo e sem esperar CR. 
+% limpar_tela/0 : limpa o terminal (ANSI)
+limpar_tela :-
+    write('\e[2J\e[H'), flush_output.
 
-% ----------------------
-% Exibir uma opção (-> quando selecionada)
-% ----------------------
-exibir_opcao(Index, Texto, Selected, Linha) :-
-    ( Index =:= Selected ->
-        string_concat("-> ", Texto, Linha)
-    ;   string_concat("   ", Texto, Linha)
+mostrar_logo(Path) :-
+    exists_file(Path),
+    setup_call_cleanup(
+        open(Path, read, Stream),
+        ler_linhas(Stream),
+        close(Stream)
     ).
 
-% Imprime lista de opções com índice começando em 0
-print_options(Opcoes, Selected) :-
-    print_options(Opcoes, 0, Selected).
+ler_linhas(Stream) :-
+    read_line_to_string(Stream, Line),
+    ( Line == end_of_file -> true
+    ; writeln(Line),
+      ler_linhas(Stream)
+    ).
+% =============================
+% Escolher opção com título fixo
+% =============================
 
-print_options([], _, _).
-print_options([T|Ts], I, Sel) :-
-    exibir_opcao(I, T, Sel, Line),
-    writeln(Line),
-    I1 is I + 1,
-    print_options(Ts, I1, Sel).
-
-% ----------------------
-% Escolher opção mostrando logo (arquivo)
-% ----------------------
-escolher_opcao_com_titulo(Path, Opcoes, Escolhida) :-
-    configs_temporarias_terminal(escolher_loop(Path, Opcoes, 0, Escolhida)).
-
-escolher_loop(Path, Opcoes, Sel, Escolhida) :-
+escolher_opcao_titulo(Path, Opcoes, Index) :-
     length(Opcoes, N),
-    utils:limpar_tela_completa,
-    utils:mostrar_logo_centralizada(Path),
-    print_options(Opcoes, Sel),
+    go(0, N, Path, Opcoes, Index).
+
+% =============================
+% Escolher opção com título custom
+% =============================
+
+escolher_opcao(Titulo, Opcoes, Index) :-
+    length(Opcoes, N),
+    go_titulo(0, N, Titulo, Opcoes, Index).
+
+% ------------------------------
+% Loop com logo
+% ------------------------------
+
+go(Sel, N, Path, Opcoes, Index) :-
+    limpar_tela,
+    mostrar_logo(Path),
+    exibir_opcoes(Sel, Opcoes, 0),
     get_key(Key),
-    ( Key == up    -> Sel1 is (Sel - 1 + N) mod N, escolher_loop(Path, Opcoes, Sel1, Escolhida)
-    ; Key == down  -> Sel1 is (Sel + 1) mod N, escolher_loop(Path, Opcoes, Sel1, Escolhida)
-    ; Key == enter -> Escolhida = Sel
-    ;               escolher_loop(Path, Opcoes, Sel, Escolhida)
+    ( Key = up    -> Sel1 is (Sel - 1 + N) mod N, go(Sel1, N, Path, Opcoes, Index)
+    ; Key = down  -> Sel1 is (Sel + 1) mod N,     go(Sel1, N, Path, Opcoes, Index)
+    ; Key = enter -> Index = Sel
+    ;               go(Sel, N, Path, Opcoes, Index)
     ).
 
-% ----------------------
-% Escolher opção mostrando título (string)
-% ----------------------
-escolher_opcao(Titulo, Opcoes, Escolhida) :-
-    configs_temporarias_terminal(escolher_loop_titulo(Titulo, Opcoes, 0, Escolhida)).
+% ------------------------------
+% Loop com título string
+% ------------------------------
 
-escolher_loop_titulo(Titulo, Opcoes, Sel, Escolhida) :-
-    length(Opcoes, N),
-    utils:limpar_tela_completa,
+go_titulo(Sel, N, Titulo, Opcoes, Index) :-
+    limpar_tela,
     writeln(Titulo),
-    print_options(Opcoes, Sel),
+    nl,
+    exibir_opcoes(Sel, Opcoes, 0),
     get_key(Key),
-    ( Key == up    -> Sel1 is (Sel - 1 + N) mod N, escolher_loop_titulo(Titulo, Opcoes, Sel1, Escolhida)
-    ; Key == down  -> Sel1 is (Sel + 1) mod N, escolher_loop_titulo(Titulo, Opcoes, Sel1, Escolhida)
-    ; Key == enter -> Escolhida = Sel
-    ;               escolher_loop_titulo(Titulo, Opcoes, Sel, Escolhida)
+    ( Key = up    -> Sel1 is (Sel - 1 + N) mod N, go_titulo(Sel1, N, Titulo, Opcoes, Index)
+    ; Key = down  -> Sel1 is (Sel + 1) mod N,     go_titulo(Sel1, N, Titulo, Opcoes, Index)
+    ; Key = enter -> Index = Sel
+    ;               go_titulo(Sel, N, Titulo, Opcoes, Index)
     ).
 
-% ----------------------
-% Captura de tecla usando get_single_char/1
-% Retorna um dos atoms: up, down, enter, other
-% - setas geralmente chegam como ESC '[' <A/B/...> (códigos 27,91,65/66)
-% - ENTER: 13 (CR) ou 10 (LF)
-% ----------------------
+% exibir_opcoes/3 : imprime lista com destaque na selecionada
+exibir_opcoes(_, [], _).
+exibir_opcoes(Sel, [H|T], I) :-
+    ( I =:= Sel -> format("-> ~w~n", [H])
+    ;             format("   ~w~n", [H])
+    ),
+    I1 is I + 1,
+    exibir_opcoes(Sel, T, I1).
+
+% ------------------------------
+% Captura tecla simples
+% ------------------------------
+% Usamos get_single_char/1 que lê sem ENTER.
+% Traduzimos ESC [ A/B para up/down.
+% ENTER = código 10.
+% ------------------------------
+
 get_key(Key) :-
-    get_single_char(C1),            % retorna código do char (inteiro)
-    ( C1 =:= 27 ->                  % ESC
-        get_single_char(_C2),       % normalmente '[' (91)
+    get_single_char(C1),
+    ( C1 = 27 ->  % ESC
+        get_single_char(91),   % [
         get_single_char(C3),
-        ( C3 =:= 65 -> Key = up
-        ; C3 =:= 66 -> Key = down
-        ; Key = other )
-    ; C1 =:= 13 -> Key = enter      % CR
-    ; C1 =:= 10 -> Key = enter      % LF
+        ( C3 = 65 -> Key = up      % 'A'
+        ; C3 = 66 -> Key = down    % 'B'
+        ; Key = other
+        )
+    ; C1 = 10 ; C1 = 13 -> Key = enter   % ENTER (LF ou CR)
     ; Key = other
     ).
+
+
+menu_test :-
+    escolher_opcao_titulo('../banners/menu_principal.txt', ["Iniciar", "Configurações", "Sair"], I),
+    executar_acao(I).
+
+
+executar_acao(0) :- writeln("Você escolheu Iniciar!").
+executar_acao(1) :- writeln("Você escolheu Configurações!").
+executar_acao(2) :- writeln("Você escolheu Sair!").

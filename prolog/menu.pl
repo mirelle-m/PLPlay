@@ -13,7 +13,7 @@ menu_principal :-
         "🎯 Modo Treino",
         "🚪 Sair"
     ],
-    navegação:escolher_opcao_com_titulo("../banners/menu_principal.txt", Opcoes, Escolha),
+    navegacao:escolher_opcao_titulo("../banners/menu_principal.txt", Opcoes, Escolha),
     utils:limpar_tela_completa,
     tratar_escolha(Escolha).
 
@@ -50,3 +50,5 @@ tratar_escolha(4) :-
 tratar_escolha(_) :-
     writeln("Opção inválida."),
     menu_principal.
+
+test :- menu_principal. 
