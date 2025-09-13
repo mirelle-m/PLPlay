@@ -9,7 +9,7 @@ PLPlay é um sistema de gamificação para facilitar o aprendizado da disciplina
     $ git clone https://github.com/mirelle-m/PLPlay.git
     
     # Em seguida, no terminal digite:
-    $ cd cd PLPlay/haskell/
+    $ cd PLPlay/haskell/
     
     #Na raiz do projeto, execute o script de instalação para instalar as dependências necessárias e iniciar o jogo:
     $ ./install.sh
@@ -20,7 +20,7 @@ PLPlay é um sistema de gamificação para facilitar o aprendizado da disciplina
     $ git clone https://github.com/mirelle-m/PLPlay.git
     
     # Em seguida, no terminal digite:
-    $ cd cd PLPlay/prolog/
+    $ cd PLPlay/prolog/
     
     # Com o swi-prolog instalado digite:
     $ swipl main.pl
