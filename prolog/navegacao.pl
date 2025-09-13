@@ -1,46 +1,99 @@
-:- module(navegacao, [
-    escolher_opcao/3,
-    escolher_opcao_com_titulo/3
-]).
+:- module(navegacao, [escolher_opcao/3, escolher_opcao_titulo/4]).
 
-:- use_module(utils).
+:- use_module(library(readutil)).  % para limpar entrada se precisar
 
-escolher_opcao_com_titulo(Banner, Opcoes, EscolhaIndex) :-
-    utils:limpar_tela_completa,
-    utils:mostrar_banner(Banner),
-    loop_escolha_numerica(Opcoes, EscolhaIndex).
+% limpar_tela/0 : limpa o terminal (ANSI)
+limpar_tela :-
+    write('\e[2J\e[H'), flush_output.
 
-escolher_opcao(Titulo, Opcoes, EscolhaIndex) :-
-    utils:limpar_tela_completa,
-    writeln(Titulo),
-    loop_escolha_numerica(Opcoes, EscolhaIndex).
-
-loop_escolha_numerica(Opcoes, EscolhaFinal) :-
-    length(Opcoes, TotalOpcoes),
-    desenhar_opcoes_numeradas(Opcoes, 1),
-    writeln('\nDigite o número da sua opção (ou 0 para voltar):'),
-    read_line_to_string(user_input, Entrada),
-    (   atom_number(Entrada, Numero), integer(Numero) ->
-        validar_escolha(Numero, TotalOpcoes, Opcoes, EscolhaFinal)
-    ;
-        writeln('\nEntrada inválida. Por favor, digite apenas um número.'),
-        sleep(2),
-        utils:limpar_tela_completa,
-        loop_escolha_numerica(Opcoes, EscolhaFinal)
+mostrar_logo(Path) :-
+    exists_file(Path),
+    setup_call_cleanup(
+        open(Path, read, Stream),
+        ler_linhas(Stream),
+        close(Stream)
     ).
 
-desenhar_opcoes_numeradas([], _).
-desenhar_opcoes_numeradas([Opcao|Resto], Index) :-
-    format('~w. ~w\n', [Index, Opcao]),
-    NovoIndex is Index + 1,
-    desenhar_opcoes_numeradas(Resto, NovoIndex).
+ler_linhas(Stream) :-
+    read_line_to_string(Stream, Line),
+    ( Line == end_of_file -> true
+    ; writeln(Line),
+      ler_linhas(Stream)
+    ).
+% =============================
+% Escolher opção com título fixo
+% =============================
 
-validar_escolha(0, _, _, quit) :- !.
-validar_escolha(Numero, TotalOpcoes, _, EscolhaFinal) :-
-    Numero > 0, Numero =< TotalOpcoes,
-    EscolhaFinal is Numero - 1.
-validar_escolha(_, _, Opcoes, EscolhaFinal) :-
-    writeln('\nOpção inválida. Tente novamente.'),
-    sleep(2),
-    utils:limpar_tela_completa,
-    loop_escolha_numerica(Opcoes, EscolhaFinal).
+escolher_opcao_titulo(Path, Opcoes, User, Index) :-
+    length(Opcoes, N),
+    go(0, N, Path, Opcoes,User, Index).
+
+% =============================
+% Escolher opção com título custom
+% =============================
+
+escolher_opcao(Titulo, Opcoes, Index) :-
+    length(Opcoes, N),
+    go_titulo(0, N, Titulo, Opcoes, Index).
+
+% ------------------------------
+% Loop com logo
+% ------------------------------
+
+go(Sel, N, Path, Opcoes, User, Index) :-
+    limpar_tela,
+    mostrar_logo(Path),
+    format("👤 Usuário: ~w~n~n", [User]),
+    exibir_opcoes(Sel, Opcoes, 0),
+    get_key(Key),
+    ( Key = up    -> Sel1 is (Sel - 1 + N) mod N, go(Sel1, N, Path, Opcoes,User, Index)
+    ; Key = down  -> Sel1 is (Sel + 1) mod N,     go(Sel1, N, Path, Opcoes, User, Index)
+    ; Key = enter -> Index = Sel
+    ;               go(Sel, N, Path, Opcoes, User, Index)
+    ).
+
+% ------------------------------
+% Loop com título string
+% ------------------------------
+
+go_titulo(Sel, N, Titulo, Opcoes, Index) :-
+    limpar_tela,
+    writeln(Titulo),
+    nl,
+    exibir_opcoes(Sel, Opcoes, 0),
+    get_key(Key),
+    ( Key = up    -> Sel1 is (Sel - 1 + N) mod N, go_titulo(Sel1, N, Titulo, Opcoes, Index)
+    ; Key = down  -> Sel1 is (Sel + 1) mod N,     go_titulo(Sel1, N, Titulo, Opcoes, Index)
+    ; Key = enter -> Index = Sel
+    ;               go_titulo(Sel, N, Titulo, Opcoes, Index)
+    ).
+
+% exibir_opcoes/3 : imprime lista com destaque na selecionada
+exibir_opcoes(_, [], _).
+exibir_opcoes(Sel, [H|T], I) :-
+    ( I =:= Sel -> format("-> ~w~n", [H])
+    ;             format("   ~w~n", [H])
+    ),
+    I1 is I + 1,
+    exibir_opcoes(Sel, T, I1).
+
+% ------------------------------
+% Captura tecla simples
+% ------------------------------
+% Usamos get_single_char/1 que lê sem ENTER.
+% Traduzimos ESC [ A/B para up/down.
+% ENTER = código 10.
+% ------------------------------
+
+get_key(Key) :-
+    get_single_char(C1),
+    ( C1 = 27 ->  % ESC
+        get_single_char(91),   % [
+        get_single_char(C3),
+        ( C3 = 65 -> Key = up      % 'A'
+        ; C3 = 66 -> Key = down    % 'B'
+        ; Key = other
+        )
+    ; C1 = 10 ; C1 = 13 -> Key = enter   % ENTER (LF ou CR)
+    ; Key = other
+    ).
