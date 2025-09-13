@@ -1,4 +1,4 @@
-:- module(navegacao, [escolher_opcao/3, escolher_opcao_titulo/3]).
+:- module(navegacao, [escolher_opcao/3, escolher_opcao_titulo/4]).
 
 :- use_module(library(readutil)).  % para limpar entrada se precisar
 
@@ -24,9 +24,9 @@ ler_linhas(Stream) :-
 % Escolher opção com título fixo
 % =============================
 
-escolher_opcao_titulo(Path, Opcoes, Index) :-
+escolher_opcao_titulo(Path, Opcoes, User, Index) :-
     length(Opcoes, N),
-    go(0, N, Path, Opcoes, Index).
+    go(0, N, Path, Opcoes,User, Index).
 
 % =============================
 % Escolher opção com título custom
@@ -40,15 +40,16 @@ escolher_opcao(Titulo, Opcoes, Index) :-
 % Loop com logo
 % ------------------------------
 
-go(Sel, N, Path, Opcoes, Index) :-
+go(Sel, N, Path, Opcoes, User, Index) :-
     limpar_tela,
     mostrar_logo(Path),
+    format("👤 Usuário: ~w~n~n", [User]),
     exibir_opcoes(Sel, Opcoes, 0),
     get_key(Key),
-    ( Key = up    -> Sel1 is (Sel - 1 + N) mod N, go(Sel1, N, Path, Opcoes, Index)
-    ; Key = down  -> Sel1 is (Sel + 1) mod N,     go(Sel1, N, Path, Opcoes, Index)
+    ( Key = up    -> Sel1 is (Sel - 1 + N) mod N, go(Sel1, N, Path, Opcoes,User, Index)
+    ; Key = down  -> Sel1 is (Sel + 1) mod N,     go(Sel1, N, Path, Opcoes, User, Index)
     ; Key = enter -> Index = Sel
-    ;               go(Sel, N, Path, Opcoes, Index)
+    ;               go(Sel, N, Path, Opcoes, User, Index)
     ).
 
 % ------------------------------
@@ -96,13 +97,3 @@ get_key(Key) :-
     ; C1 = 10 ; C1 = 13 -> Key = enter   % ENTER (LF ou CR)
     ; Key = other
     ).
-
-
-menu_test :-
-    escolher_opcao_titulo('../banners/menu_principal.txt', ["Iniciar", "Configurações", "Sair"], I),
-    executar_acao(I).
-
-
-executar_acao(0) :- writeln("Você escolheu Iniciar!").
-executar_acao(1) :- writeln("Você escolheu Configurações!").
-executar_acao(2) :- writeln("Você escolheu Sair!").
