@@ -1,15 +1,8 @@
-:- consult(inicial).
-:- consult(auth).
-:- consult(utils).
-:- consult(navegacao).
+:- initialization(main).
 
-:- consult('dados/stubs').
-:- consult('dados/missoes').
-
-:- consult(gerenciador_progresso).
-:- consult(jogo).
-:- consult(menu).
+:- use_module(inicial).
+:- use_module(auth).
 
 main :-
-    inicial:pagina_inicial,
-    auth:loop_autenticacao.
+    pagina_inicial,
+    loop_autenticacao.

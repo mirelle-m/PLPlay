@@ -8,7 +8,7 @@
 :- use_module(navegacao).
 :- use_module(auth). 
 :- use_module(flashcard).    
-:- use_module(missoes). 
+:- use_module('dados/missoes').
 
 menu_principal :-
     limpar_tela_completa,
@@ -25,7 +25,7 @@ menu_principal :-
 
 tratar_escolha(0) :-
     writeln("Iniciando novo jogo..."),
-    menu_jogo,       % precisa implementar depois em jogo.pl
+    loop_selecao_missao,       
     menu_principal.
 
 tratar_escolha(1) :-
@@ -55,3 +55,22 @@ tratar_escolha(_) :-
     menu_principal.
 
 test :- menu_principal. 
+
+loop_selecao_missao :-
+    login_corrente(User),
+    findall(Nome, missoes:missao(_, Nome), MissoesNomes),
+    append(MissoesNomes, ['<< Voltar'], OpcoesComVoltar),
+    navegacao:escolher_opcao_com_titulo('../banners/missoes.txt', OpcoesComVoltar, Escolha),
+
+    (   Escolha == quit ->
+        true
+    ;
+        nth0(Escolha, OpcoesComVoltar, NomeEscolhido),
+        (   NomeEscolhido == '<< Voltar' ->
+            true
+        ;
+            missoes:missao(IDEscolhido, NomeEscolhido),
+            jogo:iniciar_missao(User, IDEscolhido),
+            loop_selecao_missao
+        )
+    ).
