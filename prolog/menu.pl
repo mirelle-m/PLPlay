@@ -1,16 +1,12 @@
 :- module(menu, [menu_principal/0]).
-
 :- use_module(jogo).
 :- use_module(utils).
 :- use_module(navegacao).
 :- use_module(auth).
-:- use_module(stubs).
-:- use_module('dados/missoes').
-:- use_module(gerenciador_progresso).
 
 menu_principal :-
     limpar_tela_completa,
-    login_corrente(User),
+    login_corrente(User, _, _, _), % Agora login_corrente tem 4 argumentos
     Opcoes = [
         "🎮 Jogar",
         "📰 Ver Regras do Jogo",
@@ -55,9 +51,12 @@ tratar_escolha(_, _) :-
     sleep(1),
     menu_principal.
 
+% Refatoração principal: usa o progresso centralizado
 loop_selecao_missao(User) :-
+    % Obtém o progresso de missões do usuário em memória
+    auth:obter_progresso_completo(User, ProgressoMissao),
     findall(ID-Nome, missoes:missao(ID, Nome), TodasMissoes),
-    filtrar_missoes_desbloqueadas(User, TodasMissoes, MissoesDesbloqueadas),
+    filtrar_missoes_desbloqueadas(User, ProgressoMissao, TodasMissoes, MissoesDesbloqueadas),
     formatar_opcoes_missao(User, MissoesDesbloqueadas, OpcoesFormatadas),
     append(OpcoesFormatadas, ['<< Voltar'], OpcoesComVoltar),
     navegacao:escolher_opcao_titulo('../banners/missoes.txt', OpcoesComVoltar, User, Escolha),
@@ -72,21 +71,32 @@ loop_selecao_missao(User) :-
         jogo:iniciar_missao(User, IDEscolhido)
     ).
 
-formatar_opcoes_missao(_, [], []).
+% Adaptação da formatação para a nova lógica
+formatar_opcoes_missao(User, [], []).
 formatar_opcoes_missao(User, [ID-Nome | RestoMissoes], [OpcaoFormatada | RestoFormatado]) :-
-    gerenciador_progresso:contar_perguntas_faltantes(User, ID, Contagem),
+    auth:obter_progresso_completo(User, Progresso),
+    (   member(missao(ID, Acertos), Progresso) ->
+        findall(IdQuestao, pergunta_mestra(IdQuestao, ID, _, _, _), TodasQuestoes),
+        length(TodasQuestoes, TotalQuestoes),
+        length(Acertos, AcertosFeitos),
+        Faltantes is TotalQuestoes - AcertosFeitos
+    ;
+        findall(IdQuestao, pergunta_mestra(IdQuestao, ID, _, _, _), TodasQuestoes),
+        length(TodasQuestoes, Faltantes)
+    ),
     atom_string(Nome, NomeString),
-    format(string(OpcaoFormatada), '~w (~w restantes)', [NomeString, Contagem]),
+    format(string(OpcaoFormatada), '~w (~w restantes)', [NomeString, Faltantes]),
     formatar_opcoes_missao(User, RestoMissoes, RestoFormatado).
 
-filtrar_missoes_desbloqueadas(_, [], []).
-filtrar_missoes_desbloqueadas(User, [ID-Nome | RestoTodas], [ID-Nome | RestoDesbloqueadas]) :-
+% Adaptação da filtragem para a nova lógica
+filtrar_missoes_desbloqueadas(_, _, [], []).
+filtrar_missoes_desbloqueadas(User, Progresso, [ID-Nome | RestoTodas], [ID-Nome | RestoDesbloqueadas]) :-
     ID == 1,
     !,
-    filtrar_missoes_desbloqueadas(User, RestoTodas, RestoDesbloqueadas).
-filtrar_missoes_desbloqueadas(User, [ID-Nome | RestoTodas], [ID-Nome | RestoDesbloqueadas]) :-
+    filtrar_missoes_desbloqueadas(User, Progresso, RestoTodas, RestoDesbloqueadas).
+filtrar_missoes_desbloqueadas(User, Progresso, [ID-Nome | RestoTodas], [ID-Nome | RestoDesbloqueadas]) :-
     IDAnterior is ID - 1,
-    gerenciador_progresso:verificar_missao_completa(User, IDAnterior),
+    member(missao(IDAnterior, _), Progresso),
     !,
-    filtrar_missoes_desbloqueadas(User, RestoTodas, RestoDesbloqueadas).
-filtrar_missoes_desbloqueadas(_, _, []).
+    filtrar_missoes_desbloqueadas(User, Progresso, RestoTodas, RestoDesbloqueadas).
+filtrar_missoes_desbloqueadas(_, _, _, []).

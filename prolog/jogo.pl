@@ -1,42 +1,53 @@
 :- module(jogo, [
     iniciar_missao/2
 ]).
-
 :- use_module(navegacao).
-:- use_module(gerenciador_progresso).
+:- use_module(auth).
+:- use_module('dados/questoes_fatos').
 :- use_module(utils).
 
-iniciar_missao(UsuarioID, MissaoID) :-
-    carregar_missao(UsuarioID, MissaoID),
-    loop_missao(UsuarioID, MissaoID).
+% --- PREDICADOS DE INÍCIO E NAVEGAÇÃO ---
 
-loop_missao(UsuarioID, MissaoID) :-
+iniciar_missao(UsuarioID, MissaoID) :-
     utils:limpar_tela_completa,
-    findall(ID, pergunta_missao(ID, _, _, _, _, nao_acertada), PerguntasDisponiveis),
+    % Obtém o progresso completo do usuário em memória.
+    auth:obter_progresso_completo(UsuarioID, ProgressoMissao),
+    
+    (   member(missao(MissaoID, PerguntasFeitas), ProgressoMissao) ->
+        AcertosAnteriores = PerguntasFeitas
+    ;
+        AcertosAnteriores = []
+    ),
+    
+    % Encontra perguntas que ainda não foram acertadas.
+    findall(ID, (pergunta_mestra(ID, MissaoID, _, _, _), \+ member(ID, AcertosAnteriores)), PerguntasDisponiveis),
+    
     take(10, PerguntasDisponiveis, PerguntasDaRodada),
+    
     (   PerguntasDaRodada == [] ->
         writeln('Você já respondeu todas as perguntas desta missão!'),
         utils:pressionar_enter
     ;
         length(PerguntasDaRodada, TotalPerguntasRodada),
-        realizar_quiz(PerguntasDaRodada, UsuarioID, 1, TotalPerguntasRodada, 0, Acertos, 0, Erros),
-        % Verifica se completou as 10 questões ou saiu antes
+        % `realizar_quiz` agora passa a lista de acertos.
+        realizar_quiz(PerguntasDaRodada, UsuarioID, MissaoID, 1, TotalPerguntasRodada, 0, Acertos, 0, Erros, AcertosAnteriores, ListaAcertos),
+        
         TotalRespondidas is Acertos + Erros,
         (   TotalRespondidas == 10 ->
-            % Respondeu as 10 questões - mostra resultado e volta automaticamente
-            mostrar_resultado_final(UsuarioID, MissaoID, Acertos, Erros)
-        ;   % Saiu antes das 10 questões - usa o comportamento anterior
-            finalizar_e_salvar(UsuarioID, MissaoID, Acertos, Erros)
+            mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos, Erros)
+        ;
+            finalizar_e_salvar(UsuarioID, MissaoID, ListaAcertos, Erros)
         )
     ).
 
-realizar_quiz([], _, _, _, AccAcertos, AccAcertos, AccErros, AccErros) :-
-    format('DEBUG: Quiz finalizado - Lista vazia. Acertos: ~w, Erros: ~w~n', [AccAcertos, AccErros]).
+% --- PREDICADOS DO QUIZ ---
 
-realizar_quiz([PerguntaID|Resto], User, NumAtual, TotalPerguntas, AccAcertos, TotalAcertos, AccErros, TotalErros) :-
-    format('DEBUG: Pergunta ~w de ~w, ID: ~w, Acertos atuais: ~w, Erros atuais: ~w~n', [NumAtual, TotalPerguntas, PerguntaID, AccAcertos, AccErros]),
+% `realizar_quiz` agora recebe e retorna a lista de acertos.
+realizar_quiz([], _, _, _, AccAcertos, AccAcertos, AccErros, AccErros, AcertosFinais, AcertosFinais).
+
+realizar_quiz([PerguntaID|Resto], User, MissaoID, NumAtual, TotalPerguntas, AccAcertos, TotalAcertos, AccErros, TotalErros, ListaAcertosAtual, AcertosFinais) :-
     
-    pergunta_missao(PerguntaID, _, P, RC, Alts, _),
+    pergunta_mestra(PerguntaID, MissaoID, P, RC, Alts),
     
     format(string(Placar), 'Acertos: ~w | Erros: ~w', [AccAcertos, AccErros]),
     format(string(TituloQuiz), '~w~n--------------------~nQuestão ~w de ~w:~n~n~w', [Placar, NumAtual, TotalPerguntas, P]),
@@ -44,54 +55,47 @@ realizar_quiz([PerguntaID|Resto], User, NumAtual, TotalPerguntas, AccAcertos, To
     append(Alts, ['<< Voltar'], OpcoesComVoltar),
     
     navegacao:escolher_opcao(TituloQuiz, OpcoesComVoltar, Escolha),
-    format('DEBUG: Escolha do usuário: ~w~n', [Escolha]),
     
     (   Escolha == quit ->
-        format('DEBUG: Usuário escolheu quit~n'),
         TotalAcertos = AccAcertos,
-        TotalErros = AccErros
+        TotalErros = AccErros,
+        AcertosFinais = ListaAcertosAtual
     ;   nth0(Escolha, OpcoesComVoltar, RespostaUsuario),
-        format('DEBUG: Resposta do usuário: ~w~n', [RespostaUsuario]),
         (   RespostaUsuario == '<< Voltar' ->
-            format('DEBUG: Usuário escolheu voltar~n'),
             TotalAcertos = AccAcertos,
-            TotalErros = AccErros
+            TotalErros = AccErros,
+            AcertosFinais = ListaAcertosAtual
         ;   RespostaUsuario == RC ->
             writeln('\n>> RESPOSTA CORRETA! <<'),
-            marcar_acerto(PerguntaID),
+            NovoListaAcertos = [PerguntaID|ListaAcertosAtual],
             NovoAccAcertos is AccAcertos + 1,
             ProxNum is NumAtual + 1,
-            format('DEBUG: Resposta correta! Novos acertos: ~w~n', [NovoAccAcertos]),
             sleep(1),
-            realizar_quiz(Resto, User, ProxNum, TotalPerguntas, NovoAccAcertos, TotalAcertos, AccErros, TotalErros)
-        ;   format('DEBUG: Resposta errada. Correta era: ~w~n', [RC]),
-            writeln('\n>> RESPOSTA ERRADA. <<'),
+            realizar_quiz(Resto, User, MissaoID, ProxNum, TotalPerguntas, NovoAccAcertos, TotalAcertos, AccErros, TotalErros, NovoListaAcertos, AcertosFinais)
+        ;   writeln('\n>> RESPOSTA ERRADA. <<'),
             format('A resposta correta era: ~w\n', [RC]),
             NovoAccErros is AccErros + 1,
             ProxNum is NumAtual + 1,
-            format('DEBUG: Resposta errada! Novos erros: ~w~n', [NovoAccErros]),
             sleep(3),
-            realizar_quiz(Resto, User, ProxNum, TotalPerguntas, AccAcertos, TotalAcertos, NovoAccErros, TotalErros)
+            realizar_quiz(Resto, User, MissaoID, ProxNum, TotalPerguntas, AccAcertos, TotalAcertos, NovoAccErros, TotalErros, ListaAcertosAtual, AcertosFinais)
         )
     ).
 
-% Nova função para mostrar resultado final quando completa as 10 questões
-mostrar_resultado_final(UsuarioID, MissaoID, Acertos, Erros) :-
+% --- PREDICADOS DE RESULTADO E SALVAMENTO ---
+
+mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos, Erros) :-
     utils:limpar_tela_completa,
     
-    % Salva o progresso primeiro
-    salvar_missao(UsuarioID, MissaoID),
+    length(ListaAcertos, Acertos),
+    salva_progresso_missao(UsuarioID, MissaoID, Acertos, Erros, ListaAcertos, MissaoAprovada),
     
-    % Verifica se passou na missão
-    (   gerenciador_progresso:verificar_missao_completa(UsuarioID, MissaoID) ->
+    (   MissaoAprovada = true ->
         StatusMissao = 'PASSOU'
     ;   StatusMissao = 'NÃO PASSOU'
     ),
     
-    % Calcula porcentagem de acertos
     Porcentagem is (Acertos * 100) // 10,
     
-    % Botar Banner
     writeln('╔══════════════════════════════════════╗'),
     writeln('║          RESULTADO FINAL             ║'),
     writeln('╠══════════════════════════════════════╣'),
@@ -111,12 +115,22 @@ mostrar_resultado_final(UsuarioID, MissaoID, Acertos, Erros) :-
     writeln(''),
     writeln('Retornando ao menu principal em 3 segundos...'),
     
-    sleep(3).
+    sleep(3),
+    menu:menu_principal.
 
-finalizar_e_salvar(UsuarioID, MissaoID, Acertos, Erros) :-
+salva_progresso_missao(UsuarioID, MissaoID, Acertos, Erros, ListaAcertos, MissaoAprovada) :-
+    (   Acertos >= 4 -> % Lógica de aprovação: 4 ou mais acertos
+        MissaoAprovada = true
+    ;
+        MissaoAprovada = false
+    ),
+    auth:atualiza_progresso_missao(UsuarioID, MissaoID, ListaAcertos, MissaoAprovada).
+
+finalizar_e_salvar(UsuarioID, MissaoID, ListaAcertos, Erros) :-
     utils:limpar_tela_completa,
     writeln('--- TENTATIVA FINALIZADA ---'),
     writeln('Você respondeu a uma rodada de até 10 questões.'),
+    length(ListaAcertos, Acertos),
     TotalRespondidas is Acertos + Erros,
     (   TotalRespondidas > 0 ->
         format('Seu desempenho nesta rodada: ~w acertos, ~w erros.~n', [Acertos, Erros])
@@ -124,13 +138,15 @@ finalizar_e_salvar(UsuarioID, MissaoID, Acertos, Erros) :-
         writeln('Você saiu antes de responder alguma questão.')
     ),
     writeln('\nSalvando seu progresso...'),
-    salvar_missao(UsuarioID, MissaoID),
-    (   gerenciador_progresso:verificar_missao_completa(UsuarioID, MissaoID) ->
+    salva_progresso_missao(UsuarioID, MissaoID, Acertos, Erros, ListaAcertos, MissaoAprovada),
+    (   MissaoAprovada = true ->
         writeln('Status da Missão: VOCÊ PASSOU!')
     ;
         writeln('Status da Missão: CONTINUE TENTANDO!')
     ),
     utils:pressionar_enter.
+
+% --- PREDICADOS AUXILIARES ---
 
 take(N, _, []) :- N =< 0, !.
 take(_, [], []) :- !.
