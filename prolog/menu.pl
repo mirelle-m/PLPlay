@@ -2,6 +2,7 @@
 :- use_module(jogo).
 :- use_module(utils).
 :- use_module(navegacao).
+:- use_module(missoes).
 :- use_module(auth).
 
 menu_principal :-
@@ -41,6 +42,7 @@ tratar_escolha(3, User) :-
 
 tratar_escolha(4, _) :-
     writeln("Saindo do jogo... Até a próxima! 👋"),
+    auth:salva_usuarios,
     halt.
 
 tratar_escolha(quit, _) :-

@@ -1,7 +1,3 @@
-:- module(stubs, [
-    pergunta_mestra/5
-]).
-
 % --- Missão 1 ---
 pergunta_mestra('M1_Q1', 1, 'Qual das seguintes não é uma característica de uma linguagem de programação conforme definido no documento?', 'Portabilidade', ['Expressividade', 'Portabilidade', 'Universalidade', 'Simplicidade', 'Implementável']).
 pergunta_mestra('M1_Q2', 1, 'O que a característica de ''Universalidade'' de uma linguagem de programação implica?', 'Que ela pode resolver qualquer problema que um computador seja capaz de resolver.', ['Que ela deve ser fácil de aprender.', 'Que ela pode resolver apenas problemas matemáticos.', 'Que ela pode resolver qualquer problema que um computador seja capaz de resolver.', 'Que ela deve ser usada por todos os programadores.', 'Que ela só pode ser usada em máquinas de alto desempenho.']).

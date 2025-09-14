@@ -1,5 +1,4 @@
 :- module(navegacao, [escolher_opcao/3, escolher_opcao_titulo/4]).
-
 :- use_module(utils). 
 
 

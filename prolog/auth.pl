@@ -1,44 +1,56 @@
+
 :- module(auth, [
     loop_autenticacao/0,
     login_corrente/4,
-    salva_estado_usuario/0,
-    atualiza_progresso_missao/4,
-    obter_progresso_completo/2,
-    autenticar_ou_cadastrar/2
+    autenticar_ou_cadastrar/2,
+    usuario_corrente/4,
+    test/0,
+    
+    % ADICIONAR ESTES:
+    salva_usuarios/0, % Ou um predicado wrapper como salvar_estado_atual/0
+    adicionar_missao_concluida/1,
+    adicionar_nivel/1,
+    obter_progresso_missoes/2,
+    obter_progresso_nivel/2
 ]).
 
 :- use_module(library(readutil)).
 :- use_module(menu).
 
+:- dynamic usuario_corrente/4.
 :- dynamic usuario/4.
 
 % ------------------------------
-% Persistência
+% Persistência de Dados
 % ------------------------------
+
 carrega_usuarios :-
-    retractall(usuario(_, _, _, _)),
-    (   exists_file('dados/usuarios_fatos.pl')
-    ->  consult('dados/usuarios_fatos.pl')
+    retractall(usuario(_,_,_,_)),
+    (   exists_file('usuarios.pl')
+    ->  consult('usuarios.pl')
     ;   true).
 
 salva_usuarios :-
-    open('dados/usuarios_fatos.pl', write, Stream),
+    open('usuarios.pl', write, Stream), 
     forall(usuario(U,S,N,M),
            format(Stream, 'usuario(~q, ~q, ~q, ~q).~n', [U,S,N,M])),
     close(Stream).
 
-salva_estado_usuario :- salva_usuarios.
+% Predicado público para salvar o estado (wrapper para salva_usuarios).
+% ------------------------------
+% Lógica de Autenticação
+% ------------------------------
 
-% ------------------------------
-% Autenticação
-% ------------------------------
+% Loop principal que solicita a autenticação do usuário.
 loop_autenticacao :-
-    carrega_usuarios,    % ← carrega só uma vez, no início
+    carrega_usuarios,
     (   autenticar_usuario
     ->  menu:menu_principal
-    ;   writeln("Falha na autenticação."), sleep(1),
+    ;   writeln("Falha na autenticação."),
+        sleep(1),
         loop_autenticacao).
 
+% Coleta os dados do usuário a partir do terminal.
 autenticar_usuario :-
     writeln("Digite seu nome de usuário:"),
     read_line_to_string(user_input, Username),
@@ -46,39 +58,83 @@ autenticar_usuario :-
     read_line_to_string(user_input, Senha),
     autenticar_ou_cadastrar(Username, Senha).
 
+% Verifica se um usuário existe. Se sim, autentica. Se não, cadastra.
 autenticar_ou_cadastrar(Username, Senha) :-
-    (   usuario(Username, Senha, _, _) ->
-        writeln("✅ Autenticado com sucesso!")
-    ;   usuario(Username, _, _, _) ->
-        writeln("❌ Senha incorreta! Tente novamente!"), fail
-    ;   assertz(usuario(Username, Senha, "1", [])),
-        salva_usuarios,  % ← só salva quando cria usuário novo
-        writeln("✅ Cadastro realizado com sucesso!")
+    (usuario(Username, StoredSenha, ProgressoNivel, ProgressoMissao)
+    -> (Senha == StoredSenha
+        ->  % Senha correta, login bem-sucedido
+            writeln("✅ Autenticado com sucesso!"),
+            retractall(usuario_corrente(_,_,_,_)), % Garante que só um usuário esteja logado
+            asserta(usuario_corrente(Username, Senha, ProgressoNivel, ProgressoMissao))
+        ;   % Senha incorreta
+            writeln("❌ Senha incorreta! Tente novamente!"),
+            fail
+        )
+    ;   % Usuário não existe, então criar um novo
+        writeln("✅ Usuário não encontrado. Cadastro realizado com sucesso!"),
+        assertz(usuario(Username, Senha, "1", [])),
+        retractall(usuario_corrente(_,_,_,_)),
+        asserta(usuario_corrente(Username, Senha, "1", []))
     ).
 
 login_corrente(Username, Senha, ProgressoNivel, ProgressoMissao) :-
-    usuario(Username, Senha, ProgressoNivel, ProgressoMissao).
+    usuario_corrente(Username, Senha, ProgressoNivel, ProgressoMissao).
+
+obter_progresso_missoes(UsuarioID, ProgressoMissao) :-
+    usuario_corrente(UsuarioID, _, _, ProgressoMissao).
+
+obter_progresso_nivel(UsuarioID, ProgressoNivel) :-
+    usuario_corrente(UsuarioID, _, ProgressoNivel, _).
 
 % ------------------------------
-% Progresso de Missões
+% Predicados Auxiliares
 % ------------------------------
-atualiza_progresso_missao(UsuarioID, MissaoID, ListaAcertos, _Aprovada) :-
-    usuario(UsuarioID, Senha, ProgressoNivel, ProgressoMissao),
-    (   substituir_missao(ProgressoMissao, MissaoID, ListaAcertos, NovoProgressoMissao)
-    ->  true
-    ;   append(ProgressoMissao, [missao(MissaoID, ListaAcertos)], NovoProgressoMissao)
+
+adicionar_missao_concluida(MissaoID) :-
+    usuario_corrente(UsuarioID, Senha, ProgressoNivel, ProgressoAtual),
+    (   member(MissaoID, ProgressoAtual)
+    ->
+        writeln('Aviso: Esta missão já foi registrada como concluída.'),
+        NovaListaProgresso = ProgressoAtual % A lista não muda.
+    ;
+        NovaListaProgresso = [MissaoID | ProgressoAtual]
     ),
-    retract(usuario(UsuarioID, Senha, ProgressoNivel, ProgressoMissao)),
-    assertz(usuario(UsuarioID, Senha, ProgressoNivel, NovoProgressoMissao)),
-    salva_usuarios.  % ← salva somente quando há mudança
+    retract(usuario(UsuarioID, _, _, _)),
+    assertz(usuario(UsuarioID, Senha, ProgressoNivel, NovaListaProgresso)),
+    retract(usuario_corrente(UsuarioID, _, _, _)),
+    asserta(usuario_corrente(UsuarioID, Senha, ProgressoNivel, NovaListaProgresso)).
 
-obter_progresso_completo(UsuarioID, ProgressoMissao) :-
-    usuario(UsuarioID, _, _, ProgressoMissao).
 
-% ------------------------------
-% Auxiliares
-% ------------------------------
-substituir_missao([], _, _, _) :- fail.
-substituir_missao([missao(ID, _)|T], ID, NewAcertos, [missao(ID, NewAcertos)|T]).
-substituir_missao([H|T], ID, NewAcertos, [H|T2]) :-
-    substituir_missao(T, ID, NewAcertos, T2).
+adicionar_nivel(NovoNivel) :-
+    usuario_corrente(UsuarioID, Senha, _, ProgressoAtual),
+    retract(usuario(UsuarioID, _, _, _)),
+    assertz(usuario(UsuarioID, Senha, NovoNivel, ProgressoAtual)),
+    retract(usuario_corrente(UsuarioID, _, _, _)),
+    asserta(usuario_corrente(UsuarioID, Senha, NovoNivel, ProgressoAtual)).
+
+
+test:-
+    carrega_usuarios,
+    writeln("Usuários carregados Antes de alteracao:"),
+    forall(usuario(U,S,N,M),
+           format("~w: ~w, ~w, ~w~n", [U,S,N,M])),
+    autenticar_ou_cadastrar("tataco", "123"),
+    login_corrente(U1,S1,N1,M1),
+    format("Usuário logado: ~w, ~w, ~w, ~w~n", [U1,S1,N1,M1]),
+    adicionar_missao_concluida(101), %isso e o id da missao
+    adicionar_missao_concluida(102),
+    login_corrente(U2,S2,N2,M2),
+    format("Usuário logado: ~w, ~w, ~w, ~w~n", [U2,S2,N2,M2]),
+    salva_usuarios,
+    obter_progresso_nivel("tataco", NivelAtual),
+    format("Nível atual: ~w~n", [NivelAtual]),
+    NovoNivel is NivelAtual + 1,
+    adicionar_nivel(NovoNivel),
+    obter_progresso_nivel("tataco", NivelAtual2),
+    format("Nível atualizado: ~w~n", [NivelAtual2]),
+    salva_usuarios,
+    writeln("Usuários salvos Após alteração:"),
+    forall(usuario(U3,S3,N3,M3),
+           format("~w: ~w, ~w, ~w~n", [U3,S3,N3,M3])).
+
+    

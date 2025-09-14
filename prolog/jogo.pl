@@ -1,16 +1,74 @@
+% JOGO.PL - AGORA CONTÉM TODA A LÓGICA DO JOGO
+
 :- module(jogo, [
-    iniciar_missao/2
+    iniciar_selecao_missao/1, % O novo ponto de entrada, chamado pelo menu
+    iniciar_missao/2         % O predicado que executa o quiz
 ]).
-:- use_module(navegacao).
+
 :- use_module(auth).
-:- use_module('dados/questoes_fatos').
+:- use_module(missoes).
+:- use_module(perguntas).
+:- use_module(navegacao).
 :- use_module(utils).
+
+% --- PREDICADO PRINCIPAL DA SELEÇÃO DE MISSÃO (CHAMADO PELO MENU) ---
+iniciar_selecao_missao(User) :-
+    writeln('Carregando suas missões...'),
+    auth:obter_progresso_nivel(User, ProgressoMissao),
+
+    findall(ID-Nome, missoes:missao(ID, Nome), TodasMissoes),
+
+    filtrar_missoes_desbloqueadas(ProgressoMissao, TodasMissoes, MissoesDesbloqueadas),
+
+    % 4. Prepara o texto que será exibido no menu
+    formatar_opcoes_missao(ProgressoMissao, MissoesDesbloqueadas, OpcoesFormatadas),
+    append(OpcoesFormatadas, ['<< Voltar'], OpcoesComVoltar),
+
+    navegacao:escolher_opcao_titulo('../banners/missoes.txt', OpcoesComVoltar, User, Escolha),
+
+    % 6. Processa a escolha do usuário
+    processar_escolha_missao(Escolha, MissoesDesbloqueadas, User).
+
+% --- LÓGICA DE REGRAS DO JOGO ---
+% (Estes predicados foram movidos do menu.pl para cá)
+
+filtrar_missoes_desbloqueadas(_, [], []).
+filtrar_missoes_desbloqueadas(Progresso, [ID-Nome | RestoTodas], [ID-Nome | RestoDesbloqueadas]) :-
+    ID == 1, !,
+    filtrar_missoes_desbloqueadas(Progresso, RestoTodas, RestoDesbloqueadas).
+filtrar_missoes_desbloqueadas(Progresso, [ID-Nome | RestoTodas], [ID-Nome | RestoDesbloqueadas]) :-
+    IDAnterior is ID - 1,
+    member(missao(IDAnterior, _), Progresso), !,
+    filtrar_missoes_desbloqueadas(Progresso, RestoTodas, RestoDesbloqueadas).
+filtrar_missoes_desbloqueadas(Progresso, [_|RestoTodas], RestoDesbloqueadas) :-
+    filtrar_missoes_desbloqueadas(Progresso, RestoTodas, RestoDesbloqueadas).
+
+formatar_opcoes_missao(_, [], []).
+formatar_opcoes_missao(Progresso, [ID-Nome | RestoMissoes], [OpcaoFormatada | RestoFormatado]) :-
+    findall(IdQuestao, pergunta_mestra(IdQuestao, ID, _, _, _), TodasQuestoes),
+    length(TodasQuestoes, TotalQuestoes),
+    (   member(missao(ID, Acertos), Progresso) ->
+        length(Acertos, AcertosFeitos)
+    ;   AcertosFeitos = 0
+    ),
+    Faltantes is TotalQuestoes - AcertosFeitos,
+    atom_string(Nome, NomeString),
+    format(string(OpcaoFormatada), '~w (~w restantes)', [NomeString, Faltantes]),
+    formatar_opcoes_missao(Progresso, RestoMissoes, RestoFormatado).
+
+processar_escolha_missao(quit, _, _) :- !.
+processar_escolha_missao(Escolha, Missoes, _) :-
+    length(Missoes, Escolha), !. % Opção "Voltar"
+processar_escolha_missao(Escolha, Missoes, User) :-
+    nth0(Escolha, Missoes, IDEscolhido-_),
+    iniciar_missao(User, IDEscolhido),
+    iniciar_selecao_missao(User). 
+
 
 % --- PREDICADOS DE INÍCIO E NAVEGAÇÃO ---
 
 iniciar_missao(UsuarioID, MissaoID) :-
     utils:limpar_tela_completa,
-    % Obtém o progresso completo do usuário em memória.
     auth:obter_progresso_completo(UsuarioID, ProgressoMissao),
     
     (   member(missao(MissaoID, PerguntasFeitas), ProgressoMissao) ->
@@ -154,3 +212,7 @@ take(N, [H|T], [H|Resto]) :-
     N > 0,
     N1 is N - 1, 
     take(N1, T, Resto).
+
+
+teste:-
+    iniciar_selecao_missao("tataco").
