@@ -11,7 +11,9 @@ escolher_opcao(Titulo, Opcoes, Index) :-
 
 go(Sel, N, Path, Opcoes, User, Index) :-
     utils:limpar_tela_completa,
-    ( exists_file(Path) -> utils:mostrar_banner(Path) ; writeln(Path) ),
+    (exists_file(Path) -> utils:mostrar_banner(Path);
+        writeln(Path)
+    ),
     format("~n👤 Usuário: ~w~n~n", [User]),
     exibir_opcoes(Sel, Opcoes, 0),
     get_key(Key),

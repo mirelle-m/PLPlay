@@ -34,7 +34,7 @@ formatar_opcoes_missao(Progresso, [ID-Nome | RestoMissoes], [OpcaoFormatada | Re
     findall(IdQuestao, pergunta_mestra(IdQuestao, ID, _, _, _), TodasQuestoes),
     length(TodasQuestoes, TotalQuestoes),
     (member(missao(ID, Acertos), Progresso) ->
-        length(Acertos, AcertosFeitos);   
+        length(Acertos, AcertosFeitos);
         AcertosFeitos = 0
     ),
     Faltantes is TotalQuestoes - AcertosFeitos,
@@ -44,7 +44,7 @@ formatar_opcoes_missao(Progresso, [ID-Nome | RestoMissoes], [OpcaoFormatada | Re
 
 processar_escolha_missao(quit, _, _) :- !.
 processar_escolha_missao(Escolha, Missoes, _) :-
-    length(Missoes, Escolha), !. % Opção "Voltar"
+    length(Missoes, Escolha), !.
 processar_escolha_missao(Escolha, Missoes, User) :-
     nth0(Escolha, Missoes, IDEscolhido-_),
     iniciar_missao(User, IDEscolhido),
@@ -54,7 +54,7 @@ iniciar_missao(UsuarioID, MissaoID) :-
     utils:limpar_tela_completa,
     auth:obter_progresso_completo(UsuarioID, ProgressoMissao),
     (member(missao(MissaoID, PerguntasFeitas), ProgressoMissao) -> 
-        AcertosAnteriores = PerguntasFeitas; 
+        AcertosAnteriores = PerguntasFeitas;
         AcertosAnteriores = []
     ),
     findall(ID, (pergunta_mestra(ID, MissaoID, _, _, _), \+ member(ID, AcertosAnteriores)), PerguntasDisponiveis),    
@@ -63,7 +63,6 @@ iniciar_missao(UsuarioID, MissaoID) :-
         writeln('Você já respondeu todas as perguntas desta missão!'),
         utils:pressionar_enter;
         length(PerguntasDaRodada, TotalPerguntasRodada),
-        % `realizar_quiz` agora passa a lista de acertos.
         realizar_quiz(PerguntasDaRodada, UsuarioID, MissaoID, 1, TotalPerguntasRodada, 0, Acertos, 0, Erros, AcertosAnteriores, ListaAcertos),        
         TotalRespondidas is Acertos + Erros,
         (TotalRespondidas == 10 -> 
@@ -83,7 +82,7 @@ realizar_quiz([PerguntaID|Resto], User, MissaoID, NumAtual, TotalPerguntas, AccA
     (Escolha == quit ->
         TotalAcertos = AccAcertos,
         TotalErros = AccErros,
-        AcertosFinais = ListaAcertosAtual;   
+        AcertosFinais = ListaAcertosAtual;
         nth0(Escolha, OpcoesComVoltar, RespostaUsuario),
         (RespostaUsuario == '<< Voltar' ->
             TotalAcertos = AccAcertos,
@@ -110,7 +109,7 @@ mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos, Erros) :-
     length(ListaAcertos, Acertos),
     salva_progresso_missao(UsuarioID, MissaoID, Acertos, Erros, ListaAcertos, MissaoAprovada),    
     (MissaoAprovada = true ->
-        StatusMissao = 'PASSOU';   
+        StatusMissao = 'PASSOU';
         StatusMissao = 'NÃO PASSOU'
     ),    
     Porcentagem is (Acertos * 100) // 10,    
@@ -134,7 +133,7 @@ mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos, Erros) :-
     menu:menu_principal.
 
 salva_progresso_missao(UsuarioID, MissaoID, Acertos, Erros, ListaAcertos, MissaoAprovada) :-
-    (Acertos >= 4 -> % Lógica de aprovação: 4 ou mais acertos
+    (Acertos >= 4 ->
         MissaoAprovada = true;
         MissaoAprovada = false
     ),

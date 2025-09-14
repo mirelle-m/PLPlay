@@ -60,7 +60,7 @@ loop_selecao_missao(User) :-
     formatar_opcoes_missao(User, MissoesDesbloqueadas, OpcoesFormatadas),
     append(OpcoesFormatadas, ['<< Voltar'], OpcoesComVoltar),
     navegacao:escolher_opcao_titulo('../banners/missoes.txt', OpcoesComVoltar, User, Escolha),
-    (Escolha == quit -> ! ; true),
+    (Escolha == quit -> !; true),
         length(MissoesDesbloqueadas, Len
     ),
     (Escolha == Len -> !;

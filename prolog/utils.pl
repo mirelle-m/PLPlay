@@ -17,10 +17,10 @@
 :- use_module(library(lists)).
 
 mostrar_banner(Caminho) :-
-    ( exists_file(Caminho) ->
+    (exists_file(Caminho) ->
         read_file_to_string(Caminho, Conteudo, []),
-        writeln(Conteudo)
-    ; writeln("⚠️ Banner não encontrado!")
+        writeln(Conteudo);
+        writeln("⚠️ Banner não encontrado!")
     ).
 
 limpar_tela :-
@@ -30,9 +30,10 @@ limpar_tela_completa :-
     format("\e[3J\e[2J\e[H", []).
 
 terminal_largura(Width) :-
-    ( getenv('COLUMNS', S) -> catch(number_string(Width, S), _, Width = 80)
-    ; Width = 80
-    ).
+    (current_prolog_flag(tty_control, true),
+      getenv("COLUMNS", S),
+      number_string(Width, S)-> true;
+      Width = 80).
 
 centralizar(Largura, Texto, Centralizado) :-
     string_length(Texto, Len),
@@ -65,8 +66,7 @@ mostrar_logo_centralizada(Caminho) :-
     read_file_to_string(Caminho, Conteudo, []),
     split_string(Conteudo, "\n", "", Linhas),
     current_output(Stream),
-    stream_property(Stream, tty(true)), % tenta detectar terminal
-    !,
+    stream_property(Stream, tty(true)), !,
     terminal_largura(Largura),
     centralizar_bloco(Largura, Linhas, LinhasCentralizadas),
     forall(member(L, LinhasCentralizadas), writeln(L)).

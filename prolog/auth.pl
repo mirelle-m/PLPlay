@@ -21,9 +21,8 @@
 
 carrega_usuarios :-
     retractall(usuario(_,_,_,_)),
-    (   exists_file('usuarios.pl')
-    ->  consult('usuarios.pl')
-    ;   true).
+    (exists_file('usuarios.pl') -> consult('usuarios.pl');
+        true).
 
 salva_usuarios :-
     open('usuarios.pl', write, Stream),
@@ -37,15 +36,14 @@ mostrar_banner(Caminho) :-
     ( exists_file(Caminho) ->
         read_file_to_string(Caminho, Conteudo, []),
         split_string(Conteudo, "\n", "", Linhas),
-        forall(member(Linha, Linhas), writeln(Linha))
-    ; writeln("⚠️ Banner não encontrado!")
+        forall(member(Linha, Linhas), writeln(Linha));
+        writeln("⚠️ Banner não encontrado!")
     ).
 
 loop_autenticacao :-
     carrega_usuarios,
-    (   autenticar_usuario
-    ->  menu:menu_principal
-    ;   writeln("Falha na autenticação."),
+    (autenticar_usuario ->  menu:menu_principal;
+        writeln("Falha na autenticação."),
         sleep(1),
         loop_autenticacao).
 
