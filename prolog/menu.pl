@@ -32,13 +32,13 @@ tratar_escolha(1, _) :-
 
 tratar_escolha(2, _) :-
     limpar_tela_completa,
-    stubs:imprimir_mapa,
+    mostrar_banner('../banners/mapa.txt'),
     utils:pressionar_enter,
     menu_principal.
 
 tratar_escolha(3, User) :-
     limpar_tela_completa,
-    iniciar_treino.
+    flashcard:iniciar_treino.
 
 tratar_escolha(4, _) :-
     writeln("Saindo do jogo... Até a próxima! 👋"),

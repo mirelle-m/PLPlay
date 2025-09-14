@@ -31,6 +31,16 @@ salva_usuarios :-
            format(Stream, 'usuario(~q, ~q, ~q, ~q).~n', [U,S,N,M])),
     close(Stream).
 
+salva_estado_usuario :- salva_usuarios.
+
+mostrar_banner(Caminho) :-
+    ( exists_file(Caminho) ->
+        read_file_to_string(Caminho, Conteudo, []),
+        split_string(Conteudo, "\n", "", Linhas),
+        forall(member(Linha, Linhas), writeln(Linha))
+    ; writeln("⚠️ Banner não encontrado!")
+    ).
+
 loop_autenticacao :-
     carrega_usuarios,
     (   autenticar_usuario
@@ -40,6 +50,7 @@ loop_autenticacao :-
         loop_autenticacao).
 
 autenticar_usuario :-
+    mostrar_banner('../banners/autenticacao.txt'),
     writeln("Digite seu nome de usuário:"),
     read_line_to_string(user_input, Username),
     writeln("Digite sua senha:"),
@@ -47,7 +58,7 @@ autenticar_usuario :-
     autenticar_ou_cadastrar(Username, Senha).
 
 autenticar_ou_cadastrar(Username, Senha) :-
-    (usuario(Username, StoredSenha, ProgressoNivel, ProgressoMissao) -> 
+    (usuario(Username, StoredSenha, ProgressoNivel, ProgressoMissao) ->
         (Senha == StoredSenha ->
             writeln("✅ Autenticado com sucesso!"),
             retractall(usuario_corrente(_,_,_,_)),
@@ -81,7 +92,6 @@ adicionar_missao_concluida(MissaoID) :-
     assertz(usuario(UsuarioID, Senha, ProgressoNivel, NovaListaProgresso)),
     retract(usuario_corrente(UsuarioID, _, _, _)),
     asserta(usuario_corrente(UsuarioID, Senha, ProgressoNivel, NovaListaProgresso)).
-
 
 adicionar_nivel(NovoNivel) :-
     usuario_corrente(UsuarioID, Senha, _, ProgressoAtual),
