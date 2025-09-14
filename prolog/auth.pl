@@ -4,13 +4,15 @@
     salva_estado_usuario/0,
     atualiza_progresso_missao/4,
     obter_progresso_completo/2,
-    autenticar_ou_cadastrar/2
+    autenticar_ou_cadastrar/2,
+    usuario_atual/1
 ]).
 
 :- use_module(library(readutil)).
 :- use_module(menu).
 
 :- dynamic usuario/4.
+:- dynamic usuario_atual/1.
 
 % ------------------------------
 % Persistência
@@ -29,17 +31,27 @@ salva_usuarios :-
 
 salva_estado_usuario :- salva_usuarios.
 
+mostrar_banner(Caminho) :-
+    ( exists_file(Caminho) ->
+        read_file_to_string(Caminho, Conteudo, []),
+        split_string(Conteudo, "\n", "", Linhas),
+        forall(member(Linha, Linhas), writeln(Linha))
+    ; writeln("⚠️ Banner não encontrado!")
+    ).
+
+
 % ------------------------------
 % Autenticação
 % ------------------------------
 loop_autenticacao :-
-    carrega_usuarios,    % ← carrega só uma vez, no início
+    carrega_usuarios,
     (   autenticar_usuario
     ->  menu:menu_principal
     ;   writeln("Falha na autenticação."), sleep(1),
         loop_autenticacao).
 
 autenticar_usuario :-
+    mostrar_banner('../banners/autenticacao.txt'),
     writeln("Digite seu nome de usuário:"),
     read_line_to_string(user_input, Username),
     writeln("Digite sua senha:"),
@@ -48,11 +60,15 @@ autenticar_usuario :-
 
 autenticar_ou_cadastrar(Username, Senha) :-
     (   usuario(Username, Senha, _, _) ->
+        retractall(usuario_atual(_)),
+        assertz(usuario_atual(Username)),      
         writeln("✅ Autenticado com sucesso!")
     ;   usuario(Username, _, _, _) ->
         writeln("❌ Senha incorreta! Tente novamente!"), fail
     ;   assertz(usuario(Username, Senha, "1", [])),
-        salva_usuarios,  % ← só salva quando cria usuário novo
+        salva_usuarios,
+        retractall(usuario_atual(_)),          
+        assertz(usuario_atual(Username)),      
         writeln("✅ Cadastro realizado com sucesso!")
     ).
 

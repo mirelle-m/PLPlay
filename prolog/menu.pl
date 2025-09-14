@@ -6,7 +6,7 @@
 
 menu_principal :-
     limpar_tela_completa,
-    login_corrente(User, _, _, _), % Agora login_corrente tem 4 argumentos
+    auth:usuario_atual(User),
     Opcoes = [
         "🎮 Jogar",
         "📰 Ver Regras do Jogo",
