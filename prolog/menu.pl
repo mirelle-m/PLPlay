@@ -13,7 +13,7 @@ menu_principal :-
     Opcoes = [
         "🎮 Jogar",
         "📰 Ver Regras do Jogo",
-        "🗺️  Ver Mapa de Missões",
+        "🗺️ Ver Mapa de Missões",
         "🎯 Modo Treino",
         "🚪 Sair"
     ],
@@ -27,13 +27,13 @@ tratar_escolha(0, User) :-
 tratar_escolha(1, _) :-
     limpar_tela_completa,
     mostrar_banner('../banners/regras.txt'),
-    utils:pressionar_enter,
+    utils:pressionar_enter_voltar,
     menu_principal.
 
 tratar_escolha(2, _) :-
     limpar_tela_completa,
     mostrar_banner('../banners/mapa.txt'),
-    utils:pressionar_enter,
+    utils:pressionar_enter_voltar,
     menu_principal.
 
 tratar_escolha(3, User) :-
