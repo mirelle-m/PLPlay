@@ -2,13 +2,9 @@
 
 :- use_module(library(readutil)).
 :- use_module(library(random)).
-:- use_module(utils, [
-    limpar_tela/0,
-    terminal_largura/1,
-    mostrar_banner/1,
-    centralizar/3,
-    linha_sep/2
-]).
+:- use_module(utils).
+:- use_module(navegacao).
+:- use_module(menu).
 :- use_module(flashcards_fatos).
 
 carregar_flashcards(Flashcards) :-
@@ -22,8 +18,11 @@ escolher_perguntas_aleatorias(N, Lista, Selecionados) :-
     append(Selecionados, _, Embaralhados).
 
 mostrar_flashcards([]) :-
-    write("Você chegou ao fim dos flashcards!"), nl,
-    menu_fim_treino.
+    utils:limpar_tela_completa,
+    writeln("✔️ Você concluiu todos os flashcards desta rodada!"),
+    writeln("Retornando ao menu principal..."),
+    sleep(4),
+    menu:menu_principal.
 
 mostrar_flashcards([flashcard(P,R)|Fs]) :-
     limpar_tela,
@@ -42,12 +41,7 @@ mostrar_flashcards([flashcard(P,R)|Fs]) :-
     nl, write(RespostaC), nl, nl,
     linha_sep(Largura, Linha),
     writeln(Linha),
-    write("\nDigite 'sair' para encerrar o treino ou apenas Enter para continuar\n"),
-    read_line_to_string(user_input, Opcao),
-    ( string_lower(Opcao, "sair") ->
-        write("Treino encerrado!"), nl,
-        menu_fim_treino;
-        mostrar_flashcards(Fs) ).
+    menu_pos_card(Fs).
 
 iniciar_treino :-
     limpar_tela,
@@ -61,12 +55,16 @@ iniciar_treino :-
         escolher_perguntas_aleatorias(10, Todos, Selecionados),
         mostrar_flashcards(Selecionados) ).
 
-menu_fim_treino :-
-    limpar_tela,
-    mostrar_banner('../banners/fim_treino.txt'), nl,
-    write("1 - Treinar novamente"), nl,
-    write("2 - Voltar ao menu"), nl,
-    read_line_to_string(user_input, Opcao),
-    ( Opcao = "1" -> iniciar_treino; 
-        Opcao = "2" -> menu:menu_principal;
-     write("Opção inválida."), nl, menu_fim_treino ).
+menu_pos_card(Fs) :-
+    Opcoes = ["➡️ Próximo card", "🛑 Parar e voltar ao menu principal"],
+    navegacao:escolher_opcao_treino("", Opcoes, Escolha),
+    tratar_escolha_pos_card(Escolha, Fs).
+
+tratar_escolha_pos_card(0, Fs) :-
+    mostrar_flashcards(Fs).
+tratar_escolha_pos_card(1, _) :-
+    menu:menu_principal.
+tratar_escolha_pos_card(quit, _) :-
+    menu:menu_principal.
+tratar_escolha_pos_card(_, Fs) :- 
+    mostrar_flashcards(Fs).

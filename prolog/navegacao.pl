@@ -64,3 +64,24 @@ get_key(Key) :-
         Code = 3  -> Key = quit;
         Key = other
     ).
+
+escolher_opcao_treino(Titulo, Opcoes, Index) :-
+    length(Opcoes, N),
+    nl, writeln(Titulo), nl,
+    apenas_opcoes(0, N, Opcoes, Index).
+
+apenas_opcoes(Sel, N, Opcoes, Index) :-
+    exibir_opcoes(Sel, Opcoes, 0),
+    get_key(Key),
+    length(Opcoes, NumOpcoes),
+    format('\e[~wA', [NumOpcoes]),
+    (   Key = up ->
+        Sel1 is (Sel - 1 + N) mod N,
+        apenas_opcoes(Sel1, N, Opcoes, Index);
+    Key = down ->
+        Sel1 is (Sel + 1) mod N,
+        apenas_opcoes(Sel1, N, Opcoes, Index);
+    Key = enter -> Index = Sel;
+    Key = quit  -> Index = quit;
+        apenas_opcoes(Sel, N, Opcoes, Index)
+    ).
