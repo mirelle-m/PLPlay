@@ -6,7 +6,7 @@
     test/0,
 
     % ADICIONAR ESTES:
-    salva_usuarios/0, % Ou um predicado wrapper como salvar_estado_atual/0
+    salva_usuarios/0,
     adicionar_missao_concluida/1,
     adicionar_nivel/1,
     obter_progresso_missoes/2,
@@ -18,10 +18,6 @@
 
 :- dynamic usuario_corrente/4.
 :- dynamic usuario/4.
-
-% ------------------------------
-% Persistência de Dados
-% ------------------------------
 
 carrega_usuarios :-
     retractall(usuario(_,_,_,_)),
@@ -35,12 +31,6 @@ salva_usuarios :-
            format(Stream, 'usuario(~q, ~q, ~q, ~q).~n', [U,S,N,M])),
     close(Stream).
 
-% Predicado público para salvar o estado (wrapper para salva_usuarios).
-% ------------------------------
-% Lógica de Autenticação
-% ------------------------------
-
-% Loop principal que solicita a autenticação do usuário.
 loop_autenticacao :-
     carrega_usuarios,
     (   autenticar_usuario
@@ -49,7 +39,6 @@ loop_autenticacao :-
         sleep(1),
         loop_autenticacao).
 
-% Coleta os dados do usuário a partir do terminal.
 autenticar_usuario :-
     writeln("Digite seu nome de usuário:"),
     read_line_to_string(user_input, Username),
@@ -57,19 +46,15 @@ autenticar_usuario :-
     read_line_to_string(user_input, Senha),
     autenticar_ou_cadastrar(Username, Senha).
 
-% Verifica se um usuário existe. Se sim, autentica. Se não, cadastra.
 autenticar_ou_cadastrar(Username, Senha) :-
-    (usuario(Username, StoredSenha, ProgressoNivel, ProgressoMissao)
-    -> (Senha == StoredSenha
-        ->  % Senha correta, login bem-sucedido
+    (usuario(Username, StoredSenha, ProgressoNivel, ProgressoMissao) -> 
+        (Senha == StoredSenha ->
             writeln("✅ Autenticado com sucesso!"),
-            retractall(usuario_corrente(_,_,_,_)), % Garante que só um usuário esteja logado
-            asserta(usuario_corrente(Username, Senha, ProgressoNivel, ProgressoMissao))
-        ;   % Senha incorreta
+            retractall(usuario_corrente(_,_,_,_)),
+            asserta(usuario_corrente(Username, Senha, ProgressoNivel, ProgressoMissao));
             writeln("❌ Senha incorreta! Tente novamente!"),
             fail
-        )
-    ;   % Usuário não existe, então criar um novo
+        );
         writeln("✅ Usuário não encontrado. Cadastro realizado com sucesso!"),
         assertz(usuario(Username, Senha, "1", [])),
         retractall(usuario_corrente(_,_,_,_)),
@@ -85,17 +70,11 @@ obter_progresso_missoes(UsuarioID, ProgressoMissao) :-
 obter_progresso_nivel(UsuarioID, ProgressoNivel) :-
     usuario_corrente(UsuarioID, _, ProgressoNivel, _).
 
-% ------------------------------
-% Predicados Auxiliares
-% ------------------------------
-
 adicionar_missao_concluida(MissaoID) :-
     usuario_corrente(UsuarioID, Senha, ProgressoNivel, ProgressoAtual),
-    (   member(MissaoID, ProgressoAtual)
-    ->
+    (member(MissaoID, ProgressoAtual) ->
         writeln('Aviso: Esta missão já foi registrada como concluída.'),
-        NovaListaProgresso = ProgressoAtual % A lista não muda.
-    ;
+        NovaListaProgresso = ProgressoAtual;
         NovaListaProgresso = [MissaoID | ProgressoAtual]
     ),
     retract(usuario(UsuarioID, _, _, _)),
@@ -111,16 +90,15 @@ adicionar_nivel(NovoNivel) :-
     retract(usuario_corrente(UsuarioID, _, _, _)),
     asserta(usuario_corrente(UsuarioID, Senha, NovoNivel, ProgressoAtual)).
 
-
 test:-
     carrega_usuarios,
     writeln("Usuários carregados Antes de alteracao:"),
     forall(usuario(U,S,N,M),
-           format("~w: ~w, ~w, ~w~n", [U,S,N,M])),
+        format("~w: ~w, ~w, ~w~n", [U,S,N,M])),
     autenticar_ou_cadastrar("tataco", "123"),
     login_corrente(U1,S1,N1,M1),
     format("Usuário logado: ~w, ~w, ~w, ~w~n", [U1,S1,N1,M1]),
-    adicionar_missao_concluida(101), %isso e o id da missao
+    adicionar_missao_concluida(101),
     adicionar_missao_concluida(102),
     login_corrente(U2,S2,N2,M2),
     format("Usuário logado: ~w, ~w, ~w, ~w~n", [U2,S2,N2,M2]),
@@ -134,4 +112,4 @@ test:-
     salva_usuarios,
     writeln("Usuários salvos Após alteração:"),
     forall(usuario(U3,S3,N3,M3),
-           format("~w: ~w, ~w, ~w~n", [U3,S3,N3,M3])).
+        format("~w: ~w, ~w, ~w~n", [U3,S3,N3,M3])).
