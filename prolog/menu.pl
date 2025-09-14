@@ -1,18 +1,15 @@
 :- module(menu, [menu_principal/0]).
-:- use_module(utils, [
-    limpar_tela/0,
-    limpar_tela_completa/0,
-    mostrar_logo_centralizada/1,
-    mostrar_banner/1
-]).
+
+:- use_module(utils).
+:- use_module(auth).
 :- use_module(navegacao).
-:- use_module(auth). 
-:- use_module(flashcard).    
-:- use_module(missoes). 
+:- use_module(jogo).
+:- use_module(missoes).
+:- use_module(flashcard).
 
 menu_principal :-
     limpar_tela_completa,
-    login_corrente(User),
+    login_corrente(User, _, _, _), % Agora login_corrente tem 4 argumentos
     Opcoes = [
         "🎮 Jogar",
         "📰 Ver Regras do Jogo",
@@ -21,36 +18,87 @@ menu_principal :-
         "🚪 Sair"
     ],
     navegacao:escolher_opcao_titulo("../banners/menu_principal.txt", Opcoes, User, Escolha),
-    tratar_escolha(Escolha).
+    tratar_escolha(Escolha, User).
 
-tratar_escolha(0) :-
-    writeln("Iniciando novo jogo..."),
-    menu_jogo,       % precisa implementar depois em jogo.pl
+tratar_escolha(0, User) :-
+    loop_selecao_missao(User),
     menu_principal.
 
-tratar_escolha(1) :-
+tratar_escolha(1, _) :-
     limpar_tela_completa,
     mostrar_banner('../banners/regras.txt'),
-    writeln("\nPressione Enter para voltar ao menu..."),
-    get_char(_),
+    utils:pressionar_enter,
     menu_principal.
 
-tratar_escolha(2) :-
+tratar_escolha(2, _) :-
     limpar_tela_completa,
-    mostrar_banner('../banners/mapa.txt'),   % precisa implementar em missoes.pl
-    writeln("\nPressione Enter para voltar ao menu..."),
-    get_char(_),
+    stubs:imprimir_mapa,
+    utils:pressionar_enter,
     menu_principal.
 
-tratar_escolha(3) :-
+tratar_escolha(3, User) :-
     limpar_tela_completa,
-    flashcard:iniciar_treino.
+    iniciar_treino.
 
-tratar_escolha(4) :-
-    writeln("Saindo do jogo... Até a próxima! 👋").
+tratar_escolha(4, _) :-
+    writeln("Saindo do jogo... Até a próxima! 👋"),
+    auth:salva_usuarios,
+    halt.
 
-tratar_escolha(_) :-
+tratar_escolha(quit, _) :-
+    menu_principal.
+
+tratar_escolha(_, _) :-
     writeln("Opção inválida."),
+    sleep(1),
     menu_principal.
 
-test :- menu_principal.
+% Refatoração principal: usa o progresso centralizado
+loop_selecao_missao(User) :-
+    % Obtém o progresso de missões do usuário em memória
+    auth:obter_progresso_completo(User, ProgressoMissao),
+    findall(ID-Nome, missoes:missao(ID, Nome), TodasMissoes),
+    filtrar_missoes_desbloqueadas(User, ProgressoMissao, TodasMissoes, MissoesDesbloqueadas),
+    formatar_opcoes_missao(User, MissoesDesbloqueadas, OpcoesFormatadas),
+    append(OpcoesFormatadas, ['<< Voltar'], OpcoesComVoltar),
+    navegacao:escolher_opcao_titulo('../banners/missoes.txt', OpcoesComVoltar, User, Escolha),
+
+    (   Escolha == quit -> ! ; true ),
+
+    length(MissoesDesbloqueadas, Len),
+    (   Escolha == Len ->
+        !
+    ;
+        nth0(Escolha, MissoesDesbloqueadas, IDEscolhido-_),
+        jogo:iniciar_missao(User, IDEscolhido)
+    ).
+
+% Adaptação da formatação para a nova lógica
+formatar_opcoes_missao(User, [], []).
+formatar_opcoes_missao(User, [ID-Nome | RestoMissoes], [OpcaoFormatada | RestoFormatado]) :-
+    auth:obter_progresso_completo(User, Progresso),
+    (   member(missao(ID, Acertos), Progresso) ->
+        findall(IdQuestao, pergunta_mestra(IdQuestao, ID, _, _, _), TodasQuestoes),
+        length(TodasQuestoes, TotalQuestoes),
+        length(Acertos, AcertosFeitos),
+        Faltantes is TotalQuestoes - AcertosFeitos
+    ;
+        findall(IdQuestao, pergunta_mestra(IdQuestao, ID, _, _, _), TodasQuestoes),
+        length(TodasQuestoes, Faltantes)
+    ),
+    atom_string(Nome, NomeString),
+    format(string(OpcaoFormatada), '~w (~w restantes)', [NomeString, Faltantes]),
+    formatar_opcoes_missao(User, RestoMissoes, RestoFormatado).
+
+% Adaptação da filtragem para a nova lógica
+filtrar_missoes_desbloqueadas(_, _, [], []).
+filtrar_missoes_desbloqueadas(User, Progresso, [ID-Nome | RestoTodas], [ID-Nome | RestoDesbloqueadas]) :-
+    ID == 1,
+    !,
+    filtrar_missoes_desbloqueadas(User, Progresso, RestoTodas, RestoDesbloqueadas).
+filtrar_missoes_desbloqueadas(User, Progresso, [ID-Nome | RestoTodas], [ID-Nome | RestoDesbloqueadas]) :-
+    IDAnterior is ID - 1,
+    member(missao(IDAnterior, _), Progresso),
+    !,
+    filtrar_missoes_desbloqueadas(User, Progresso, RestoTodas, RestoDesbloqueadas).
+filtrar_missoes_desbloqueadas(_, _, _, []).

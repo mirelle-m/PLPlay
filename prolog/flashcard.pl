@@ -42,7 +42,7 @@ mostrar_flashcards([flashcard(P,R)|Fs]) :-
     nl, write(RespostaC), nl, nl,
     linha_sep(Largura, Linha),
     writeln(Linha),
-    write("\nDigite 'sair' para encerrar o treino ou apenas Enter para continuar"),
+    write("\nDigite 'sair' para encerrar o treino ou apenas Enter para continuar\n"),
     read_line_to_string(user_input, Opcao),
     ( string_lower(Opcao, "sair") ->
         write("Treino encerrado!"), nl,
