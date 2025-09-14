@@ -177,17 +177,7 @@ obterMissoesDisponiveis missaoCompletada =
 iniciarQuiz :: [Pergunta] -> Nivel -> String -> IO String
 iniciarQuiz perguntas nivelEscolhido missaoAtual = do
     putStrLn "Iniciando o quiz..."
-    case missaoAtual of
-        "5" -> do 
-              putStrLn $ "Batalha dos Fundamentos "
-              mostrarLogoCentralizada "../banners/boss1.txt"
-        "7" -> do
-              putStrLn $ "Guardião da Recursão"
-              mostrarLogoCentralizada "../banners/boss2.txt"
-        "9" -> do
-              putStrLn $ "Mestre da Dedução"
-              mostrarLogoCentralizada "../banners/boss3.txt"
-        _   -> putStrLn $ "Missão atual: " ++ missaoAtual
+    putStrLn $ "Missão atual: " ++ missaoAtual
 
     resultado <- executarQuiz perguntas (ResultadoQuiz [] [] nivelEscolhido)
     exibirResumo resultado

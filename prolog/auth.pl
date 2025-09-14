@@ -58,7 +58,7 @@ autenticar_usuario :-
     ( ResUser = erro(Msg) ->
         format("Erro: ~s~n", [Msg]), fail
     ; true
-    ),
+    ), nl,
     writeln("Digite sua senha:"),
     read_line_to_string(user_input, Senha),
     validar_senha(Senha, ResSenha),

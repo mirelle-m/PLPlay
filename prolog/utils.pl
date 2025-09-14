@@ -1,12 +1,14 @@
 :- module(utils, [
-    mostrar_banner,
+    mostrar_banner/1,
     limpar_tela/0,
     limpar_tela_completa/0,
     centralizar/3,
     centralizar_bloco/3,
     mostrar_logo_centralizada/1,
     remove_aspas/2,
-    adiciona_aspas/2
+    adiciona_aspas/2,
+    terminal_largura/1,
+    linha_sep/2
 ]).
 
 mostrar_banner(Caminho) :-
@@ -61,6 +63,7 @@ mostrar_logo_centralizada(Caminho) :-
     terminal_largura(Largura),
     centralizar_bloco(Largura, Linhas, LinhasCentralizadas),
     forall(member(L, LinhasCentralizadas), writeln(L)).
+    
 mostrar_logo_centralizada(Caminho) :-
     read_file_to_string(Caminho, Conteudo, []),
     split_string(Conteudo, "\n", "", Linhas),
@@ -77,6 +80,12 @@ adiciona_aspas(Str, ComAspas) :-
     string_concat(Temp, "\"", ComAspas).
 
 terminal_largura(Width) :-
-    (current_prolog_flag(tty_control, true) ->
-        getenv("COLUMNS", S), number_string(Width, S)
-    ; Width = 80).  % valor padrão
+    (current_prolog_flag(tty_control, true),
+      getenv("COLUMNS", S),
+      number_string(Width, S)-> true; 
+      Width = 80).
+
+linha_sep(Largura, Linha) :-
+    length(Cs, Largura),
+    maplist(=('='), Cs),
+    string_chars(Linha, Cs).
