@@ -1,3 +1,5 @@
+:- module(missoes, [missao/2]).
+
 missao(1, 'Missão 1: Conceitos Fundamentais de LPs').
 missao(2, 'Missão 2: Compiladores e Paradigmas').
 missao(3, 'Missão 3: Sistemas de Tipos').
