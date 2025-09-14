@@ -15,6 +15,7 @@
 
 :- use_module(library(readutil)).
 :- use_module(menu).
+:- use_module(utils).
 
 :- dynamic usuario_corrente/4.
 :- dynamic usuario/4.
@@ -29,16 +30,6 @@ salva_usuarios :-
     forall(usuario(U,S,N,M),
            format(Stream, 'usuario(~q, ~q, ~q, ~q).~n', [U,S,N,M])),
     close(Stream).
-
-salva_estado_usuario :- salva_usuarios.
-
-mostrar_banner(Caminho) :-
-    ( exists_file(Caminho) ->
-        read_file_to_string(Caminho, Conteudo, []),
-        split_string(Conteudo, "\n", "", Linhas),
-        forall(member(Linha, Linhas), writeln(Linha));
-        writeln("⚠️ Banner não encontrado!")
-    ).
 
 loop_autenticacao :-
     carrega_usuarios,
@@ -97,27 +88,3 @@ adicionar_nivel(NovoNivel) :-
     assertz(usuario(UsuarioID, Senha, NovoNivel, ProgressoAtual)),
     retract(usuario_corrente(UsuarioID, _, _, _)),
     asserta(usuario_corrente(UsuarioID, Senha, NovoNivel, ProgressoAtual)).
-
-test:-
-    carrega_usuarios,
-    writeln("Usuários carregados Antes de alteracao:"),
-    forall(usuario(U,S,N,M),
-        format("~w: ~w, ~w, ~w~n", [U,S,N,M])),
-    autenticar_ou_cadastrar("tataco", "123"),
-    login_corrente(U1,S1,N1,M1),
-    format("Usuário logado: ~w, ~w, ~w, ~w~n", [U1,S1,N1,M1]),
-    adicionar_missao_concluida(101),
-    adicionar_missao_concluida(102),
-    login_corrente(U2,S2,N2,M2),
-    format("Usuário logado: ~w, ~w, ~w, ~w~n", [U2,S2,N2,M2]),
-    salva_usuarios,
-    obter_progresso_nivel("tataco", NivelAtual),
-    format("Nível atual: ~w~n", [NivelAtual]),
-    NovoNivel is NivelAtual + 1,
-    adicionar_nivel(NovoNivel),
-    obter_progresso_nivel("tataco", NivelAtual2),
-    format("Nível atualizado: ~w~n", [NivelAtual2]),
-    salva_usuarios,
-    writeln("Usuários salvos Após alteração:"),
-    forall(usuario(U3,S3,N3,M3),
-        format("~w: ~w, ~w, ~w~n", [U3,S3,N3,M3])).

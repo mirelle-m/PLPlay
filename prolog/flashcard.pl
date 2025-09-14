@@ -9,7 +9,7 @@
     centralizar/3,
     linha_sep/2
 ]).
-:- use_module('../data/flashcards').
+:- use_module(flashcards_fatos).
 
 carregar_flashcards(Flashcards) :-
     findall(flashcard(P,R), flashcards:flashcard(P,R), Flashcards).
