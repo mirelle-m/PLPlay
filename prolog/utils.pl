@@ -24,11 +24,11 @@ mostrar_banner(Caminho) :-
             stream_property(Stream, tty(true))
         ->  terminal_largura(Largura),
             centralizar_bloco(Largura, Linhas, LinhasCentralizadas),
-            forall(member(L, LinhasCentralizadas), writeln(L))
-        ;   % Fallback for non-tty output
+            forall(member(L, LinhasCentralizadas), writeln(L));
+         % Fallback for non-tty output
             writeln(Conteudo)
-        )
-    ;   writeln("⚠️ Banner não encontrado!")
+        );
+           writeln("⚠️ Banner não encontrado!")
     ).
 
 limpar_tela :-
@@ -40,8 +40,8 @@ limpar_tela_completa :-
 terminal_largura(Width) :-
     (   current_prolog_flag(tty_control, true),
         tty_size(_, Width)
-    ->  true
-    ;   Width = 80
+    ->  true;
+       Width = 80
     ).
 
 centralizar(Largura, Texto, Centralizado) :-
@@ -78,8 +78,8 @@ mostrar_logo_centralizada(Caminho) :-
         stream_property(Stream, tty(true))
     ->  terminal_largura(Largura),
         centralizar_bloco(Largura, Linhas, LinhasCentralizadas),
-        forall(member(L, LinhasCentralizadas), writeln(L))
-    ;   % Fallback for non-tty output
+        forall(member(L, LinhasCentralizadas), writeln(L));
+           % Fallback for non-tty output
         writeln(Conteudo)
     ).
 

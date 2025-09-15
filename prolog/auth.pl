@@ -22,7 +22,7 @@
 
 validar_senha(Senha) :-
     atom_length(Senha, Tamanho),
-    Tamanho >= 6,  % Mínimo 6 caracteres
+    Tamanho >= 6,  
     atom_chars(Senha, Chars),
     tem_maiuscula(Chars),
     tem_minuscula(Chars),
@@ -33,7 +33,6 @@ tem_maiuscula(Chars) :-
     member(C, Chars),
     char_type(C, upper), !.
 
-% Verifica se tem pelo menos uma letra minúscula
 tem_minuscula(Chars) :-
     member(C, Chars),
     char_type(C, lower), !.
@@ -44,8 +43,8 @@ tem_digito(Chars) :-
 
 tem_especial(Chars) :-
     member(C, Chars),
-    \+ char_type(C, alnum),  % Não é letra nem número
-    \+ char_type(C, space), !.  % Não é espaço
+    \+ char_type(C, alnum),  
+    \+ char_type(C, space), !.
 
 carrega_usuarios :-
     retractall(usuario(_,_,_,_,_)),
@@ -71,7 +70,7 @@ autenticar_usuario :-
     read_line_to_string(user_input, Username),
     writeln("Digite sua senha:"),
     read_line_to_string(user_input, SenhaStr),
-    atom_string(Senha, SenhaStr),  % Converte string para atom
+    atom_string(Senha, SenhaStr), 
     autenticar_ou_cadastrar(Username, Senha).
 
 autenticar_ou_cadastrar(Username, Senha) :-
@@ -96,7 +95,6 @@ autenticar_ou_cadastrar(Username, Senha) :-
             retractall(usuario_corrente(_,_,_,_,_)),
             asserta(usuario_corrente(Username, Senha, "1", [], [])),
             treino:gerar_flashcards_para_usuario([]);
-            % Senha não atende aos critérios
             utils:limpar_tela,
             writeln("❌ Senha não atende aos critérios de segurança!"),
             writeln("A senha deve ter pelo menos: 6 caracteres, uma letra maiúscula, uma letra minúscula, um dígito e um caracter especial."),
