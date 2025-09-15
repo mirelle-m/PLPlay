@@ -6,6 +6,11 @@
 :- use_module(missoes).
 :- use_module(perguntas).
 
+maximo_erros(facil, 3).
+maximo_erros(medio, 2).
+maximo_erros(dificil, 1).
+
+
 iniciar_selecao_missao(User) :-
     writeln('Carregando suas missões...'),
     auth:obter_progresso_nivel(User, NivelStr),
@@ -37,8 +42,10 @@ processar_escolha_missao(Escolha, Missoes, _) :-
     length(Missoes, Escolha), !.
 processar_escolha_missao(Escolha, Missoes, User) :-
     nth0(Escolha, Missoes, IDEscolhido-_),
-    iniciar_missao(User, IDEscolhido),
-    iniciar_selecao_missao(User). 
+    OpcoesDificuldade = ['Fácil (Até 3 erros)', 'Médio (Até 2 erros)', 'Difícil (Até 1 erro)'],
+    navegacao:submenu("Escolha a dificuldade da missão:", OpcoesDificuldade, EscolhaDificuldade),
+    iniciar_missao(User, IDEscolhido, EscolhaDificuldade),
+    iniciar_selecao_missao(User).
 
 iniciar_missao(UsuarioID, MissaoID) :-
     utils:limpar_tela_completa,
@@ -87,13 +94,18 @@ mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos) :-
     utils:limpar_tela_completa,
     utils:mostrar_banner('../banners/resultado_missao.txt'),
     length(ListaAcertos, Acertos),
-    (Acertos >= 4 -> 
+    auth:obter_progresso_nivel(UsuarioID, NivelAtualStr),
+    atom_number(NivelAtualStr, NivelNum),
+    (Acertos >= 4 ->
         Status = 'PASSOU',
-        auth:obter_progresso_nivel(UsuarioID, NivelAtual),
-        atom_number(NivelAtual, NivelNum),
-        NovoNivelNum is NivelNum + 1,
-        atom_string(NovoNivelNum, NovoNivel),
-        auth:adicionar_nivel(NovoNivel);
+        (MissaoID == NivelNum ->
+            NovoNivelNum is NivelNum + 1,
+            atom_string(NovoNivelNum, NovoNivel),
+            auth:adicionar_nivel(NovoNivel)
+
+            ;
+            true
+        );
         Status = 'NÃO PASSOU'
     ),
     Porcentagem is (Acertos * 100) // 10,
@@ -102,7 +114,7 @@ mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos) :-
     format('Aproveitamento: ~w%~n', [Porcentagem]),
     format('Status da Missão: ~w~n', [Status]),
     writeln(''),
-    writeln('Pressione Enter para retornar ao menu principal...'),
+    writeln('Pressione Enter para retornar ao menu de missões...'),
     read_line_to_string(user_input, _),
     menu:menu_principal,
         mostrar_menu_pos_pergunta(PerguntaID, Resto, User, MissaoID, NumAtual, TotalPerguntas,
