@@ -1,5 +1,6 @@
 :- module(auth, [
     loop_autenticacao/0,
+    autenticar_usuario/0,
     login_corrente/5,
     autenticar_ou_cadastrar/2,
     salva_usuarios/0,
@@ -18,6 +19,34 @@
 :- dynamic usuario/5.
 :- dynamic usuario_corrente/5.
 
+
+validar_senha(Senha) :-
+    atom_length(Senha, Tamanho),
+    Tamanho >= 6,  % Mínimo 6 caracteres
+    atom_chars(Senha, Chars),
+    tem_maiuscula(Chars),
+    tem_minuscula(Chars),
+    tem_digito(Chars),
+    tem_especial(Chars).
+
+tem_maiuscula(Chars) :-
+    member(C, Chars),
+    char_type(C, upper), !.
+
+% Verifica se tem pelo menos uma letra minúscula
+tem_minuscula(Chars) :-
+    member(C, Chars),
+    char_type(C, lower), !.
+
+tem_digito(Chars) :-
+    member(C, Chars),
+    char_type(C, digit), !.
+
+tem_especial(Chars) :-
+    member(C, Chars),
+    \+ char_type(C, alnum),  % Não é letra nem número
+    \+ char_type(C, space), !.  % Não é espaço
+
 carrega_usuarios :-
     retractall(usuario(_,_,_,_,_)),
     (exists_file('usuarios.pl') -> consult('usuarios.pl'); true).
@@ -30,8 +59,8 @@ salva_usuarios :-
 
 loop_autenticacao :-
     carrega_usuarios,
+    utils:limpar_tela,
     (autenticar_usuario ->  menu:menu_principal;
-        writeln("Falha na autenticação."),
         sleep(1),
         loop_autenticacao
     ).
@@ -41,26 +70,40 @@ autenticar_usuario :-
     writeln("Digite seu nome de usuário:"),
     read_line_to_string(user_input, Username),
     writeln("Digite sua senha:"),
-    read_line_to_string(user_input, Senha),
+    read_line_to_string(user_input, SenhaStr),
+    atom_string(Senha, SenhaStr),  % Converte string para atom
     autenticar_ou_cadastrar(Username, Senha).
 
 autenticar_ou_cadastrar(Username, Senha) :-
     (usuario(Username, StoredSenha, Nivel, Acertos, Salvos) ->
         (Senha == StoredSenha ->
+            utils:limpar_tela,
             writeln("✅ Autenticado com sucesso!"),
             retractall(usuario_corrente(_,_,_,_,_)),
             asserta(usuario_corrente(Username, Senha, Nivel, Acertos, Salvos)),
             writeln('Pressione ENTER para continuar...'),
             read_line_to_string(user_input, _);
+            utils:limpar_tela,
             writeln("❌ Senha incorreta! Tente novamente!"),
+            sleep(1),
             fail
         );
-        writeln("✅ Usuário não encontrado. Cadastro realizado com sucesso!"),
-        sleep(1),
-        assertz(usuario(Username, Senha, "1", [], [])),
-        retractall(usuario_corrente(_,_,_,_,_)),
-        asserta(usuario_corrente(Username, Senha, "1", [], [])),
-        treino:gerar_flashcards_para_usuario([])
+        (validar_senha(Senha) ->
+            utils:limpar_tela,
+            writeln("✅ Usuário não encontrado. Cadastro realizado com sucesso!"),
+            sleep(1),
+            assertz(usuario(Username, Senha, "1", [], [])),
+            retractall(usuario_corrente(_,_,_,_,_)),
+            asserta(usuario_corrente(Username, Senha, "1", [], [])),
+            treino:gerar_flashcards_para_usuario([]);
+            % Senha não atende aos critérios
+            utils:limpar_tela,
+            writeln("❌ Senha não atende aos critérios de segurança!"),
+            writeln("A senha deve ter pelo menos: 6 caracteres, uma letra maiúscula, uma letra minúscula, um dígito e um caracter especial."),
+            writeln("Pressione ENTER para tentar novamente..."),
+            read_line_to_string(user_input, _),
+            fail
+        )
     ).
 
 login_corrente(Username, Senha, Nivel, Acertos, Salvos) :-
@@ -107,7 +150,6 @@ adicionar_nivel(NovoNivel) :-
 finalizar_sessao :-
     writeln('Salvando seu progresso...'),
     salva_usuarios,
-    writeln('Limpando os fatos do arquivo de flashcards para a próxima sessão...'),
     open('flashcards.pl', write, Stream),
     format(Stream, ':- module(flashcards, [flashcard/2]).~n~n', []),
     format(Stream, ':- dynamic flashcard/2.~n~n', []),
