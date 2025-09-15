@@ -25,7 +25,7 @@ PLPlay é um sistema de gamificação para facilitar o aprendizado da disciplina
     $ cd PLPlay/prolog/
     
     # Com o swi-prolog instalado digite:
-    $ swipl main.pl
+    $ swipl run.pl
 
 ## Equipe
 - Anna Lívia dos Santos Macêdo Costa 
