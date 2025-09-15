@@ -40,8 +40,17 @@ processar_escolha_missao(Escolha, Missoes, User) :-
     iniciar_missao(User, IDEscolhido),
     iniciar_selecao_missao(User). 
 
+tratar_banner_chefao(MissaoID) :-
+    (   missoes:banner_chefao(MissaoID, CaminhoDoBanner) ->
+        ( utils:mostrar_banner(CaminhoDoBanner),
+          sleep(1),
+          utils:pressionar_enter )
+    ;
+        true
+    ).
 iniciar_missao(UsuarioID, MissaoID) :-
     utils:limpar_tela_completa,
+    tratar_banner_chefao(MissaoID),
     auth:obter_questoes_acertadas(UsuarioID, AcertosAnteriores),
     findall(ID, (perguntas:pergunta_mestra(ID, MissaoID, _, _, _), \+ member(ID, AcertosAnteriores)), PerguntasDisponiveis),
     take(10, PerguntasDisponiveis, PerguntasDaRodada),
