@@ -83,18 +83,18 @@ realizar_quiz([PerguntaID|Resto], User, MissaoID, NumAtual, TotalPerguntas,
         )
     ).
 
-mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos) :-
+mostrar_resultado_final(UsuarioID, _MissaoID, ListaAcertos) :-
     utils:limpar_tela_completa,
     utils:mostrar_banner('../banners/resultado_missao.txt'),
     length(ListaAcertos, Acertos),
     (Acertos >= 4 -> 
-        Status = 'PASSOU',
+        Status = 'Próxima missão desbloqueada! ˗ˏˋ ★ ˎˊ˗ ',
         auth:obter_progresso_nivel(UsuarioID, NivelAtual),
         atom_number(NivelAtual, NivelNum),
         NovoNivelNum is NivelNum + 1,
         atom_string(NovoNivelNum, NovoNivel),
         auth:adicionar_nivel(NovoNivel);
-        Status = 'NÃO PASSOU'
+        Status = 'Ops...Não foi dessa vez! Vamos tentar de novo?'
     ),
     Porcentagem is (Acertos * 100) // 10,
     writeln('Questões respondidas: 10'),
@@ -104,9 +104,7 @@ mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos) :-
     writeln(''),
     writeln('Pressione Enter para retornar ao menu principal...'),
     read_line_to_string(user_input, _),
-    menu:menu_principal,
-        mostrar_menu_pos_pergunta(PerguntaID, Resto, User, MissaoID, NumAtual, TotalPerguntas,
-                                  NovoAccAcertos, NovoAccErros, NovaListaAcertos, AcertosFinais).
+    menu:menu_principal.
 
 take(N, _, []) :- N =< 0, !.
 take(_, [], []) :- !.
