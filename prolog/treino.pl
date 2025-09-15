@@ -27,7 +27,7 @@ mostrar_flashcards([]) :-
     utils:limpar_tela_completa,
     writeln("✔️ Você concluiu todos os flashcards desta rodada!"),
     writeln("Retornando ao menu principal..."),
-    sleep(4),
+    sleep(2),
     menu:menu_principal.
 
 mostrar_flashcards([flashcard(P,R)|Fs]) :-
@@ -70,15 +70,21 @@ gerar_flashcards_para_usuario(ListaDeIDs) :-
     (ListaDeIDs == [] ->
         true;
         open('flashcards.pl', write, Stream),
+        writeln(Stream, ':- module(flashcards, [flashcard/2]).'),
+        writeln(Stream, ''),
+        writeln(Stream, ':- dynamic flashcard/2.'),
+        writeln(Stream, ''),
         forall(member(ID, ListaDeIDs),
-            (perguntas:pergunta_mestra(ID, _, P, R, _), format(Stream, 'flashcard(~q, ~q).~n', [P, R]))
+            (perguntas:pergunta_mestra(ID, _, P, R, _), 
+                format(Stream, 'flashcard(~q, ~q).~n', [P, R])
+            )
         ),
         close(Stream)
     ).
 
 menu_pos_card(Fs) :-
     Opcoes = ["➡️ Próximo card", "🛑 Parar e voltar ao menu principal"],
-    navegacao:escolher_opcao_treino("", Opcoes, Escolha),
+    navegacao:submenu("", Opcoes, Escolha),
     tratar_escolha_pos_card(Escolha, Fs).
 
 tratar_escolha_pos_card(0, Fs) :-

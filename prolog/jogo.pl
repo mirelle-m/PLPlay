@@ -52,7 +52,7 @@ iniciar_missao(UsuarioID, MissaoID) :-
         mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos)
     ).
 
-realizar_quiz([], _, _, _, _, AccAcertos, AccErros, ListaAcertos, ListaAcertos).
+realizar_quiz([], _, _, _, _, _, _, ListaAcertos, ListaAcertos).
 realizar_quiz([PerguntaID|Resto], User, MissaoID, NumAtual, TotalPerguntas,
              AccAcertos, AccErros, ListaAcertosAtual, AcertosFinais) :-
     perguntas:pergunta_mestra(PerguntaID, MissaoID, P, RC, Alts),
@@ -61,27 +61,25 @@ realizar_quiz([PerguntaID|Resto], User, MissaoID, NumAtual, TotalPerguntas,
     format(string(TituloQuiz), 
     '~w~n--------------------~nQuestão ~w de ~w:~n~n~w',
     [Placar, NumAtual, TotalPerguntas, PerguntaTexto]),
-    append(Alts, ['<< Voltar'], OpcoesComVoltar),
-    navegacao:escolher_opcao(TituloQuiz, OpcoesComVoltar, Escolha),
+    navegacao:escolher_opcao(TituloQuiz, Alts, Escolha),
     (Escolha == quit -> AcertosFinais = ListaAcertosAtual;
-        nth0(Escolha, OpcoesComVoltar, RespostaUsuario),
-        (RespostaUsuario == '<< Voltar' -> AcertosFinais = ListaAcertosAtual;
-            (RespostaUsuario == RC ->
-                writeln('\n>> RESPOSTA CORRETA! <<'),
-                utils:pressionar_enter,
-                NovoAccAcertos is AccAcertos + 1,
-                auth:adicionar_acerto(PerguntaID),
-                ProxNum is NumAtual + 1,
-                realizar_quiz(Resto, User, MissaoID, ProxNum, TotalPerguntas,
-                              NovoAccAcertos, AccErros, [PerguntaID|ListaAcertosAtual], AcertosFinais);
-                writeln('\n>> RESPOSTA ERRADA. <<'),
-                format('A resposta correta era: ~w~n', [RC]),
-                utils:pressionar_enter,
-                NovoAccErros is AccErros + 1,
-                ProxNum is NumAtual + 1,
-                realizar_quiz(Resto, User, MissaoID, ProxNum, TotalPerguntas,
-                              AccAcertos, NovoAccErros, ListaAcertosAtual, AcertosFinais)
-            )
+        nth0(Escolha, Alts, RespostaUsuario),
+        (RespostaUsuario == RC ->
+            writeln('\n>> RESPOSTA CORRETA! <<'),
+            NovoAccAcertos is AccAcertos + 1,
+            auth:adicionar_acerto(PerguntaID),
+            NovaListaAcertos = [PerguntaID|ListaAcertosAtual],
+            mostrar_menu_pos_pergunta(PerguntaID, Resto, User, MissaoID,
+                                      NumAtual, TotalPerguntas,
+                                      NovoAccAcertos, AccErros,
+                                      NovaListaAcertos, AcertosFinais);
+            writeln('\n>> RESPOSTA ERRADA. <<'),
+            format('A resposta correta era: ~w~n', [RC]),
+            NovoAccErros is AccErros + 1,
+            mostrar_menu_pos_pergunta(PerguntaID, Resto, User, MissaoID,
+                                      NumAtual, TotalPerguntas,
+                                      AccAcertos, NovoAccErros,
+                                      ListaAcertosAtual, AcertosFinais)
         )
     ).
 
@@ -95,8 +93,7 @@ mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos) :-
         atom_number(NivelAtual, NivelNum),
         NovoNivelNum is NivelNum + 1,
         atom_string(NovoNivelNum, NovoNivel),
-        auth:adicionar_nivel(NovoNivel)
-    ; 
+        auth:adicionar_nivel(NovoNivel);
         Status = 'NÃO PASSOU'
     ),
     Porcentagem is (Acertos * 100) // 10,
@@ -107,9 +104,9 @@ mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos) :-
     writeln(''),
     writeln('Pressione Enter para retornar ao menu principal...'),
     read_line_to_string(user_input, _),
-    menu:menu_principal.
-
-finalizar_e_salvar(_, _, _).
+    menu:menu_principal,
+        mostrar_menu_pos_pergunta(PerguntaID, Resto, User, MissaoID, NumAtual, TotalPerguntas,
+                                  NovoAccAcertos, NovoAccErros, NovaListaAcertos, AcertosFinais).
 
 take(N, _, []) :- N =< 0, !.
 take(_, [], []) :- !.
@@ -117,3 +114,19 @@ take(N, [H|T], [H|Resto]) :-
     N > 0,
     N1 is N - 1,
     take(N1, T, Resto).
+
+mostrar_menu_pos_pergunta(PerguntaID, Resto, User, MissaoID, NumAtual, TotalPerguntas,
+                          AccAcertos, AccErros, ListaAcertos, AcertosFinais) :-
+    Opcoes = ["➡️ Continuar missão", "💾 Salvar como flashcard", "🛑 Voltar ao menu"],
+    navegacao:submenu("O que deseja fazer?", Opcoes, Escolha),
+    (Escolha == quit -> AcertosFinais = ListaAcertos;
+        Escolha == 0 -> ProxNum is NumAtual + 1,
+        realizar_quiz(Resto, User, MissaoID, ProxNum, TotalPerguntas,
+                      AccAcertos, AccErros, ListaAcertos, AcertosFinais);
+        Escolha == 1 -> auth:adicionar_questao_salva(PerguntaID),
+            writeln("✅ Questão salva como flashcard!"),
+            ProxNum is NumAtual + 1,
+            realizar_quiz(Resto, User, MissaoID, ProxNum, TotalPerguntas,
+                      AccAcertos, AccErros, ListaAcertos, AcertosFinais);
+        Escolha == 2 -> menu:menu_principal
+    ).
