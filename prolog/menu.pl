@@ -36,7 +36,7 @@ tratar_escolha(2, _) :-
     utils:pressionar_enter_voltar,
     menu_principal.
 
-tratar_escolha(3, User) :-
+tratar_escolha(3, _) :-
     limpar_tela_completa,
     iniciar_treino.
 

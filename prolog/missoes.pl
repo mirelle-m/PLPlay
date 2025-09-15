@@ -9,3 +9,6 @@ missao(6, '🧭 Missão 6: Paradigma Funcional').
 missao(7, '👾 Chefão 7: Guardião da Recursão').
 missao(8, '🧭 Missão 8: Paradigma Lógico').
 missao(9, '👾 Chefão 9: Mestre da Dedução').
+banner_chefao(5, '../banners/boss1.txt').
+banner_chefao(7, '../banners/boss2.txt').
+banner_chefao(9, '../banners/boss3.txt').

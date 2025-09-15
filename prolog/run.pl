@@ -9,3 +9,5 @@ run :-
     auth:loop_autenticacao ->
         menu:menu_principal;
         writeln('Encerrando o programa.').
+
+:- initialization(run, main).

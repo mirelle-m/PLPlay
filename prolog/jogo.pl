@@ -47,8 +47,17 @@ processar_escolha_missao(Escolha, Missoes, User) :-
     iniciar_missao(User, IDEscolhido, EscolhaDificuldade),
     iniciar_selecao_missao(User).
 
+tratar_banner_chefao(MissaoID) :-
+    (   missoes:banner_chefao(MissaoID, CaminhoDoBanner) ->
+        ( utils:mostrar_banner(CaminhoDoBanner),
+          sleep(1),
+          utils:pressionar_enter )
+    ;
+        true
+    ).
 iniciar_missao(UsuarioID, MissaoID) :-
     utils:limpar_tela_completa,
+    tratar_banner_chefao(MissaoID),
     auth:obter_questoes_acertadas(UsuarioID, AcertosAnteriores),
     findall(ID, (perguntas:pergunta_mestra(ID, MissaoID, _, _, _), \+ member(ID, AcertosAnteriores)), PerguntasDisponiveis),
     take(10, PerguntasDisponiveis, PerguntasDaRodada),
@@ -90,23 +99,25 @@ realizar_quiz([PerguntaID|Resto], User, MissaoID, NumAtual, TotalPerguntas,
         )
     ).
 
-mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos) :-
+mostrar_resultado_final(UsuarioID, _MissaoID, ListaAcertos) :-
     utils:limpar_tela_completa,
     utils:mostrar_banner('../banners/resultado_missao.txt'),
     length(ListaAcertos, Acertos),
-    auth:obter_progresso_nivel(UsuarioID, NivelAtualStr),
+
+
+auth:obter_progresso_nivel(UsuarioID, NivelAtualStr),
     atom_number(NivelAtualStr, NivelNum),
     (Acertos >= 4 ->
-        Status = 'PASSOU',
         (MissaoID == NivelNum ->
+            Status = 'Próxima missão desbloqueada! ˗ˏˋ ★ ˎˊ˗ ',
             NovoNivelNum is NivelNum + 1,
             atom_string(NovoNivelNum, NovoNivel),
             auth:adicionar_nivel(NovoNivel)
-
-            ;
-            true
-        );
-        Status = 'NÃO PASSOU'
+        ;
+            Status = 'Próxima missão desbloqueada! ˗ˏˋ ★ ˎˊ˗ '
+        )
+    ;
+        Status = 'Ops...Não foi dessa vez! Vamos tentar de novo?'
     ),
     Porcentagem is (Acertos * 100) // 10,
     writeln('Questões respondidas: 10'),
@@ -116,9 +127,7 @@ mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos) :-
     writeln(''),
     writeln('Pressione Enter para retornar ao menu de missões...'),
     read_line_to_string(user_input, _),
-    menu:menu_principal,
-        mostrar_menu_pos_pergunta(PerguntaID, Resto, User, MissaoID, NumAtual, TotalPerguntas,
-                                  NovoAccAcertos, NovoAccErros, NovaListaAcertos, AcertosFinais).
+    menu:menu_principal.
 
 take(N, _, []) :- N =< 0, !.
 take(_, [], []) :- !.
