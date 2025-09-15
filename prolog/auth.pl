@@ -63,14 +63,6 @@ autenticar_ou_cadastrar(Username, Senha) :-
         treino:gerar_flashcards_para_usuario([])
     ).
 
-mostrar_banner(Caminho) :-
-    (exists_file(Caminho) ->
-        read_file_to_string(Caminho, Conteudo, []),
-        split_string(Conteudo, "\n", "", Linhas),
-        forall(member(Linha, Linhas), writeln(Linha));
-        writeln("⚠️ Banner não encontrado!")
-    ).
-
 login_corrente(Username, Senha, Nivel, Acertos, Salvos) :-
     usuario_corrente(Username, Senha, Nivel, Acertos, Salvos).
 
