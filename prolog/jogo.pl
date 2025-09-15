@@ -14,8 +14,8 @@ iniciar_selecao_missao(User) :-
     include(missao_liberada(Nivel), TodasMissoes, MissoesDesbloqueadas),
     auth:obter_questoes_acertadas(User, QuestoesAcertadas),
     formatar_opcoes_missao_questoes(QuestoesAcertadas, MissoesDesbloqueadas, OpcoesFormatadas),
-    append(OpcoesFormatadas, ['<< Voltar'], OpcoesComVoltar),
-    navegacao:escolher_opcao_titulo('../banners/missoes.txt', OpcoesComVoltar, User, Escolha),
+    append(OpcoesFormatadas, ['🏡 Voltar ao menu principal'], OpcoesComVoltar),
+    navegacao:escolher_opcao_titulo('../banners/escolha_estagio.txt', OpcoesComVoltar, User, Escolha),
     processar_escolha_missao(Escolha, MissoesDesbloqueadas, User).
 
 missao_liberada(Nivel, ID-_) :-
@@ -67,14 +67,14 @@ realizar_quiz([PerguntaID|Resto], User, MissaoID, NumAtual, TotalPerguntas,
         nth0(Escolha, OpcoesComVoltar, RespostaUsuario),
         (RespostaUsuario == '<< Voltar' -> AcertosFinais = ListaAcertosAtual;
             (RespostaUsuario == RC ->
-                writeln('\n>> RESPOSTA CORRETA! <<'),
+                writeln('\n🎉 Parabéns! Você acertou!!'),
                 utils:pressionar_enter,
                 NovoAccAcertos is AccAcertos + 1,
                 auth:adicionar_acerto(PerguntaID),
                 ProxNum is NumAtual + 1,
                 realizar_quiz(Resto, User, MissaoID, ProxNum, TotalPerguntas,
                               NovoAccAcertos, AccErros, [PerguntaID|ListaAcertosAtual], AcertosFinais);
-                writeln('\n>> RESPOSTA ERRADA. <<'),
+                writeln('\n❌ Ops... não foi dessa vez! Resposta incorreta!!'),
                 format('A resposta correta era: ~w~n', [RC]),
                 utils:pressionar_enter,
                 NovoAccErros is AccErros + 1,
