@@ -1,4 +1,4 @@
-:- module(jogo, [iniciar_selecao_missao/1, iniciar_missao/2]).
+:- module(jogo, [iniciar_selecao_missao/1, iniciar_missao/3]).
 
 :- use_module(utils).
 :- use_module(auth).
@@ -44,7 +44,11 @@ processar_escolha_missao(Escolha, Missoes, User) :-
     nth0(Escolha, Missoes, IDEscolhido-_),
     OpcoesDificuldade = ['Fácil (Até 3 erros)', 'Médio (Até 2 erros)', 'Difícil (Até 1 erro)'],
     navegacao:submenu("Escolha a dificuldade da missão:", OpcoesDificuldade, EscolhaDificuldade),
-    iniciar_missao(User, IDEscolhido, EscolhaDificuldade),
+    ( EscolhaDificuldade == 0 -> Dificuldade = facil
+    ; EscolhaDificuldade == 1 -> Dificuldade = medio
+    ; EscolhaDificuldade == 2 -> Dificuldade = dificil
+    ),
+    iniciar_missao(User, IDEscolhido, Dificuldade),
     iniciar_selecao_missao(User).
 
 tratar_banner_chefao(MissaoID) :-
@@ -55,69 +59,80 @@ tratar_banner_chefao(MissaoID) :-
     ;
         true
     ).
-iniciar_missao(UsuarioID, MissaoID) :-
+iniciar_missao(UsuarioID, MissaoID, Dificuldade) :-
     utils:limpar_tela_completa,
     tratar_banner_chefao(MissaoID),
     auth:obter_questoes_acertadas(UsuarioID, AcertosAnteriores),
-    findall(ID, (perguntas:pergunta_mestra(ID, MissaoID, _, _, _), \+ member(ID, AcertosAnteriores)), PerguntasDisponiveis),
+    findall(ID, (perguntas:pergunta_mestra(ID, MissaoID, _, _, _),
+                 \+ member(ID, AcertosAnteriores)), PerguntasDisponiveis),
     take(10, PerguntasDisponiveis, PerguntasDaRodada),
-    (PerguntasDaRodada == [] ->
+    ( PerguntasDaRodada == [] ->
         writeln('Você já respondeu todas as perguntas desta missão!'),
-        utils:pressionar_enter;
-        realizar_quiz(PerguntasDaRodada, UsuarioID, MissaoID, 1, 10, 0, 0, [], ListaAcertos),
-        mostrar_resultado_final(UsuarioID, MissaoID, ListaAcertos)
+        utils:pressionar_enter
+    ; realizar_quiz(PerguntasDaRodada, UsuarioID, MissaoID, Dificuldade,
+                    1, 10, 0, 0, [], ListaAcertos),
+      mostrar_resultado_final(UsuarioID, MissaoID, Dificuldade, ListaAcertos)
     ).
 
 realizar_quiz([], _, _, _, _, _, _, ListaAcertos, ListaAcertos).
-realizar_quiz([PerguntaID|Resto], User, MissaoID, NumAtual, TotalPerguntas,
-             AccAcertos, AccErros, ListaAcertosAtual, AcertosFinais) :-
-    perguntas:pergunta_mestra(PerguntaID, MissaoID, P, RC, Alts),
-    (atom(P) -> PerguntaTexto = P; atom_string(P, PerguntaTexto)),
-    format(string(Placar), 'Acertos: ~w | Erros: ~w', [AccAcertos, AccErros]),
-    format(string(TituloQuiz), 
-    '~w~n--------------------~nQuestão ~w de ~w:~n~n~w',
-    [Placar, NumAtual, TotalPerguntas, PerguntaTexto]),
-    navegacao:escolher_opcao(TituloQuiz, Alts, Escolha),
-    (Escolha == quit -> AcertosFinais = ListaAcertosAtual;
-        nth0(Escolha, Alts, RespostaUsuario),
-        (RespostaUsuario == RC ->
-            writeln('\n🎉 Parabéns! Você acertou!!'),
-            NovoAccAcertos is AccAcertos + 1,
-            auth:adicionar_acerto(PerguntaID),
-            NovaListaAcertos = [PerguntaID|ListaAcertosAtual],
-            mostrar_menu_pos_pergunta(PerguntaID, Resto, User, MissaoID,
-                                      NumAtual, TotalPerguntas,
-                                      NovoAccAcertos, AccErros,
-                                      NovaListaAcertos, AcertosFinais);
-            writeln('\n❌ Ops... não foi dessa vez! Resposta incorreta!!'),
+realizar_quiz([PerguntaID|Resto], User, MissaoID, Dificuldade,
+             NumAtual, TotalPerguntas, AccAcertos, AccErros,
+             ListaAcertosAtual, AcertosFinais) :-
+    maximo_erros(Dificuldade, LimiteErros),
+    ( AccErros >= LimiteErros ->
+        utils:limpar_tela_completa,
+        writeln("\n❌ Você atingiu o limite de erros para essa dificuldade!"),
+        sleep(3),
+        mostrar_resultado_final(User, MissaoID, Dificuldade, ListaAcertosAtual),
+        AcertosFinais = ListaAcertosAtual
+    ;
+        perguntas:pergunta_mestra(PerguntaID, MissaoID, P, RC, Alts),
+        (atom(P) -> PerguntaTexto = P; atom_string(P, PerguntaTexto)),
+        format(string(Placar), 'Acertos: ~w | Erros: ~w (Máx: ~w)',
+               [AccAcertos, AccErros, LimiteErros]),
+        format(string(TituloQuiz),
+               '~w~n--------------------~nQuestão ~w de ~w:~n~n~w',
+               [Placar, NumAtual, TotalPerguntas, PerguntaTexto]),
+        navegacao:escolher_opcao(TituloQuiz, Alts, Escolha),
+        ( Escolha == quit -> AcertosFinais = ListaAcertosAtual
+        ; nth0(Escolha, Alts, RespostaUsuario),
+          ( RespostaUsuario == RC ->
+              writeln('\n🎉 Parabéns! Você acertou!!'),
+              NovoAccAcertos is AccAcertos + 1,
+              auth:adicionar_acerto(PerguntaID),
+              NovaListaAcertos = [PerguntaID|ListaAcertosAtual],
+              mostrar_menu_pos_pergunta(PerguntaID, Resto, User, MissaoID,
+                                        Dificuldade, NumAtual, TotalPerguntas,
+                                        NovoAccAcertos, AccErros,
+                                        NovaListaAcertos, AcertosFinais)
+          ; writeln('\n❌ Ops... não foi dessa vez! Resposta incorreta!!'),
             format('A resposta correta era: ~w~n', [RC]),
             NovoAccErros is AccErros + 1,
             mostrar_menu_pos_pergunta(PerguntaID, Resto, User, MissaoID,
-                                      NumAtual, TotalPerguntas,
+                                      Dificuldade, NumAtual, TotalPerguntas,
                                       AccAcertos, NovoAccErros,
                                       ListaAcertosAtual, AcertosFinais)
+          )
         )
     ).
 
-mostrar_resultado_final(UsuarioID, _MissaoID, ListaAcertos) :-
+mostrar_resultado_final(UsuarioID, MissaoID, Dificuldade, ListaAcertos) :-
     utils:limpar_tela_completa,
     utils:mostrar_banner('../banners/resultado_missao.txt'),
     length(ListaAcertos, Acertos),
-
-
-auth:obter_progresso_nivel(UsuarioID, NivelAtualStr),
-    atom_number(NivelAtualStr, NivelNum),
-    (Acertos >= 4 ->
-        (MissaoID == NivelNum ->
-            Status = 'Próxima missão desbloqueada! ˗ˏˋ ★ ˎˊ˗ ',
-            NovoNivelNum is NivelNum + 1,
-            atom_string(NovoNivelNum, NovoNivel),
-            auth:adicionar_nivel(NovoNivel)
-        ;
-            Status = 'Próxima missão desbloqueada! ˗ˏˋ ★ ˎˊ˗ '
+    maximo_erros(Dificuldade, LimiteErros),
+    ( Acertos >= (10 - LimiteErros) ->
+        ( auth:obter_progresso_nivel(UsuarioID, NivelAtualStr),
+          atom_number(NivelAtualStr, NivelNum),
+          ( MissaoID == NivelNum ->
+              Status = 'Próxima missão desbloqueada! ˗ˏˋ ★ ˎˊ˗ ',
+              NovoNivelNum is NivelNum + 1,
+              atom_string(NovoNivelNum, NovoNivel),
+              auth:adicionar_nivel(NovoNivel)
+          ; Status = 'Missão concluída com sucesso! ★ Já desbloqueada anteriormente ★'
+          )
         )
-    ;
-        Status = 'Ops...Não foi dessa vez! Vamos tentar de novo?'
+    ; Status = 'Ops... Não foi dessa vez! Vamos tentar de novo?'
     ),
     Porcentagem is (Acertos * 100) // 10,
     writeln('Questões respondidas: 10'),
@@ -136,18 +151,25 @@ take(N, [H|T], [H|Resto]) :-
     N1 is N - 1,
     take(N1, T, Resto).
 
-mostrar_menu_pos_pergunta(PerguntaID, Resto, User, MissaoID, NumAtual, TotalPerguntas,
+mostrar_menu_pos_pergunta(PerguntaID, Resto, User, MissaoID, Dificuldade,
+                          NumAtual, TotalPerguntas,
                           AccAcertos, AccErros, ListaAcertos, AcertosFinais) :-
     Opcoes = ["➡️ Continuar missão", "💾 Salvar como flashcard", "🛑 Voltar ao menu"],
     navegacao:submenu("O que deseja fazer?", Opcoes, Escolha),
-    (Escolha == quit -> AcertosFinais = ListaAcertos;
-        Escolha == 0 -> ProxNum is NumAtual + 1,
-        realizar_quiz(Resto, User, MissaoID, ProxNum, TotalPerguntas,
-                      AccAcertos, AccErros, ListaAcertos, AcertosFinais);
-        Escolha == 1 -> auth:adicionar_questao_salva(PerguntaID),
-            writeln("✅ Questão salva como flashcard!"),
-            ProxNum is NumAtual + 1,
-            realizar_quiz(Resto, User, MissaoID, ProxNum, TotalPerguntas,
-                      AccAcertos, AccErros, ListaAcertos, AcertosFinais);
-        Escolha == 2 -> menu:menu_principal
+    ( Escolha == quit -> AcertosFinais = ListaAcertos
+    ; Escolha == 0 ->
+        ProxNum is NumAtual + 1,
+        realizar_quiz(Resto, User, MissaoID, Dificuldade,
+                      ProxNum, TotalPerguntas,
+                      AccAcertos, AccErros,
+                      ListaAcertos, AcertosFinais)
+    ; Escolha == 1 ->
+        auth:adicionar_questao_salva(PerguntaID),
+        writeln("✅ Questão salva como flashcard!"),
+        ProxNum is NumAtual + 1,
+        realizar_quiz(Resto, User, MissaoID, Dificuldade,
+                      ProxNum, TotalPerguntas,
+                      AccAcertos, AccErros,
+                      ListaAcertos, AcertosFinais)
+    ; Escolha == 2 -> menu:menu_principal
     ).

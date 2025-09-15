@@ -15,7 +15,7 @@ menu_principal :-
         "📰 Ver Regras do Jogo",
         "🗺️ Ver Mapa de Missões",
         "🎯 Modo Treino",
-        "🚪 Sair"
+        "🚪 Salvar e Sair"
     ],
     navegacao:escolher_opcao_titulo("../banners/menu_principal.txt", Opcoes, User, Escolha),
     tratar_escolha(Escolha, User).
