@@ -10,7 +10,6 @@ maximo_erros(facil, 3).
 maximo_erros(medio, 2).
 maximo_erros(dificil, 1).
 
-
 iniciar_selecao_missao(User) :-
     writeln('Carregando suas missões...'),
     auth:obter_progresso_nivel(User, NivelStr),
@@ -74,7 +73,9 @@ iniciar_missao(UsuarioID, MissaoID, Dificuldade) :-
       mostrar_resultado_final(UsuarioID, MissaoID, Dificuldade, ListaAcertos)
     ).
 
-realizar_quiz([], _, _, _, _, _, _, ListaAcertos, ListaAcertos).
+% Caso base correto para realizar_quiz/10
+realizar_quiz([], _User, _MissaoID, _Dificuldade, _NumAtual, _TotalPerguntas,
+             _AccAcertos, _AccErros, ListaAcertos, ListaAcertos).
 realizar_quiz([PerguntaID|Resto], User, MissaoID, Dificuldade,
              NumAtual, TotalPerguntas, AccAcertos, AccErros,
              ListaAcertosAtual, AcertosFinais) :-
@@ -82,7 +83,7 @@ realizar_quiz([PerguntaID|Resto], User, MissaoID, Dificuldade,
     ( AccErros >= LimiteErros ->
         utils:limpar_tela_completa,
         writeln("\n❌ Você atingiu o limite de erros para essa dificuldade!"),
-        sleep(3),
+        sleep(2),
         mostrar_resultado_final(User, MissaoID, Dificuldade, ListaAcertosAtual),
         AcertosFinais = ListaAcertosAtual
     ;
