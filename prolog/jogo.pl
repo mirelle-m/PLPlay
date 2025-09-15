@@ -5,6 +5,7 @@
 :- use_module(navegacao).
 :- use_module(missoes).
 :- use_module(perguntas).
+:- use_module(library(lists)).
 
 maximo_erros(facil, 3).
 maximo_erros(medio, 2).
@@ -40,7 +41,7 @@ processar_escolha_missao(quit, _, _) :- !.
 processar_escolha_missao(Escolha, Missoes, _) :- length(Missoes, Escolha), !.
 processar_escolha_missao(Escolha, Missoes, User) :-
     nth0(Escolha, Missoes, IDEscolhido-_),
-    OpcoesDificuldade = ['Fácil (Até 3 erros)', 'Médio (Até 2 erros)', 'Difícil (Até 1 erro)'],
+    OpcoesDificuldade = ['🟢 Fácil (Até 3 erros)', '🟡 Médio (Até 2 erros)', '🔴 Difícil (Até 1 erro)'],
     navegacao:submenu("Escolha a dificuldade da missão:", OpcoesDificuldade, EscolhaDificuldade),
     (EscolhaDificuldade == 0 -> Dificuldade = facil;
         EscolhaDificuldade == 1 -> Dificuldade = medio;
@@ -114,31 +115,99 @@ realizar_quiz([PerguntaID|Resto], User, MissaoID, Dificuldade,
 
 mostrar_resultado_final(UsuarioID, MissaoID, Dificuldade, ListaAcertos) :-
     utils:limpar_tela_completa,
+    
+    (   catch(tty_size(_, Width), _, Width = 80) -> true 
+    ;   Width = 80
+    ),
     utils:mostrar_banner('../banners/resultado_missao.txt'),
+    
     length(ListaAcertos, Acertos),
     maximo_erros(Dificuldade, LimiteErros),
-    (Acertos >= (10 - LimiteErros) ->
-        (auth:obter_progresso_nivel(UsuarioID, NivelAtualStr),
-          atom_number(NivelAtualStr, NivelNum),
-          (MissaoID == NivelNum ->
-              Status = 'Próxima missão desbloqueada! ˗ˏˋ ★ ˎˊ˗ ',
-              NovoNivelNum is NivelNum + 1,
-              atom_string(NovoNivelNum, NovoNivel),
-              auth:adicionar_nivel(NovoNivel);
-            Status = 'Missão concluída com sucesso! ★ Já desbloqueada anteriormente ★'
-          )
-        );
+    
+    % --- Logic to determine status ---
+    (   Acertos >= (10 - LimiteErros) ->
+        (   auth:obter_progresso_nivel(UsuarioID, NivelAtualStr),
+            atom_number(NivelAtualStr, NivelNum),
+            (   MissaoID == NivelNum ->
+                Status = '˗ˏˋ ★ Próxima missão desbloqueada! ★ ˎˊ˗',
+                NovoNivelNum is NivelNum + 1,
+                atom_string(NovoNivelNum, NovoNivel),
+                auth:adicionar_nivel(NovoNivel)
+            ;
+                Status = 'Missão concluída com sucesso! (Já desbloqueada anteriormente)'
+            )
+        )
+    ;
         Status = 'Ops... Não foi dessa vez! Vamos tentar de novo?'
     ),
+    
     Porcentagem is (Acertos * 100) // 10,
-    writeln('Questões respondidas: 10'),
-    format('Acertos: ~w~n', [Acertos]),
-    format('Aproveitamento: ~w%~n', [Porcentagem]),
-    format('Status da Missão: ~w~n', [Status]),
-    writeln(''),
-    writeln('Pressione Enter para retornar ao menu de missões...'),
+    
+    exibir_relatorio(Acertos, Porcentagem, Status, Width),
+    
     read_line_to_string(user_input, _),
     menu:menu_principal.
+
+repeat_char(CharAtom, Count, String) :-
+    length(List, Count),
+    maplist(=(CharAtom), List),
+    atomics_to_string(List, String).
+
+print_full_width_line(CharAtom, Width) :-
+    repeat_char(CharAtom, Width, LineString),
+    writeln(LineString).
+
+gerar_barra_progresso(Porcentagem, Barra) :-
+    Preenchidos is Porcentagem // 10,
+    Vazios is 10 - Preenchidos,
+    length(ListaPreenchidos, Preenchidos),
+    maplist(=('▓'), ListaPreenchidos),
+    atomics_to_string(ListaPreenchidos, StrPreenchidos),
+    length(ListaVazios, Vazios),
+    maplist(=('░'), ListaVazios),
+    atomics_to_string(ListaVazios, StrVazios),
+    format(string(Barra), '[~s~s]', [StrPreenchidos, StrVazios]).
+
+exibir_relatorio(Acertos, Porcentagem, Status, Width) :-
+    BlockContentWidth = 46, 
+    BlockPadding is max(0, (Width - BlockContentWidth) // 2),
+
+    gerar_barra_progresso(Porcentagem, BarraProgresso),
+    nl,
+    print_full_width_line('-', Width),
+
+    Header1 = 'RELATÓRIO DA MISSÃO📊',
+    atom_length(Header1, Header1Width),
+    Header1Padding is max(0, (Width - Header1Width) // 2),
+    format('~t~*|~s~n', [Header1Padding, Header1]),
+
+    print_full_width_line('-', Width),
+    
+    format('~t~*|» Questões respondidas .... 10~n', [BlockPadding]),
+    format('~t~*|» Acertos ................. ~w~n', [BlockPadding, Acertos]),
+    format('~t~*|» Aproveitamento .......... ~w% ~s~n~n', [BlockPadding, Porcentagem, BarraProgresso]),
+
+    (   sub_string(Status, _, _, _, 'Não foi dessa vez') ->
+        (   Header2 = 'STATUS: Missão Falhou! ✖',
+            StatusHeader = Header2
+        )
+    ;
+        (   Header3 = 'STATUS: Missão Cumprida!',
+            StatusHeader = Header3
+        )
+    ),
+    
+    print_full_width_line('-', Width),
+
+    atom_length(StatusHeader, StatusHeaderWidth),
+    StatusHeaderPadding is max(0, (Width - StatusHeaderWidth) // 2),
+    format('~t~*|~s~n', [StatusHeaderPadding, StatusHeader]),
+    
+    print_full_width_line('-', Width),
+
+    format('~t~*|~w~n~n', [BlockPadding, Status]),
+    format('~t~*|Pressione Enter para retornar ao menu...~n', [BlockPadding]),
+    format('~t~*||> ', [BlockPadding]).
 
 take(N, _, []) :- N =< 0, !.
 take(_, [], []) :- !.
