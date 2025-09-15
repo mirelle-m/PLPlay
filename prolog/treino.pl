@@ -10,8 +10,7 @@
 :- use_module(flashcards).
 
 carregar_flashcards_gerados(Flashcards) :-
-    (exists_file('flashcards.pl') ->
-        consult('flashcards.pl'),
+    (exists_file('flashcards.pl') -> consult('flashcards.pl'),
         findall(flashcard(P,R), flashcard(P,R), Flashcards);
         Flashcards = []
     ).
@@ -38,8 +37,8 @@ mostrar_flashcards([flashcard(P,R)|Fs]) :-
     centralizar(Largura, P, PerguntaC),
     nl, write(PerguntaC), nl, nl,
     linha_sep(Largura, Linha),
-    writeln(Linha),
-    write("\nAperte Enter para ver a resposta\n"),
+    writeln(Linha), nl,
+    write("Aperte Enter para ver a resposta"), nl,
     read_line_to_string(user_input, _),
     linha_sep(Largura, Linha),
     writeln(Linha),
@@ -77,8 +76,7 @@ gerar_flashcards_para_usuario(ListaDeIDs) :-
         forall(member(ID, ListaDeIDs),
             (perguntas:pergunta_mestra(ID, _, P, R, _), 
                 format(Stream, 'flashcard(~q, ~q).~n', [P, R])
-            )
-        ),
+            )),
         close(Stream)
     ).
 

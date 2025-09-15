@@ -76,27 +76,23 @@ autenticar_usuario :-
 autenticar_ou_cadastrar(Username, Senha) :-
     (usuario(Username, StoredSenha, Nivel, Acertos, Salvos) ->
         (Senha == StoredSenha ->
-            utils:limpar_tela,
-            writeln("✅ Autenticado com sucesso!"),
+            nl, writeln("✅ Autenticado com sucesso!"),
             retractall(usuario_corrente(_,_,_,_,_)),
             asserta(usuario_corrente(Username, Senha, Nivel, Acertos, Salvos)),
-            writeln('Pressione ENTER para continuar...'),
+            writeln("Pressione ENTER para continuar..."),
             read_line_to_string(user_input, _);
-            utils:limpar_tela,
-            writeln("❌ Senha incorreta! Tente novamente!"),
+            nl, writeln("❌ Senha incorreta! Tente novamente!"), nl,
             sleep(1),
             fail
         );
         (validar_senha(Senha) ->
-            utils:limpar_tela,
-            writeln("✅ Usuário não encontrado. Cadastro realizado com sucesso!"),
+            nl, writeln("✅ Usuário não encontrado. Cadastro realizado com sucesso!"),
             sleep(1),
             assertz(usuario(Username, Senha, "1", [], [])),
             retractall(usuario_corrente(_,_,_,_,_)),
             asserta(usuario_corrente(Username, Senha, "1", [], [])),
             treino:gerar_flashcards_para_usuario([]);
-            utils:limpar_tela,
-            writeln("❌ Senha não atende aos critérios de segurança!"),
+            nl, writeln("❌ Senha não atende aos critérios de segurança!"),
             writeln("A senha deve ter pelo menos: 6 caracteres, uma letra maiúscula, uma letra minúscula, um dígito e um caracter especial."),
             writeln("Pressione ENTER para tentar novamente..."),
             read_line_to_string(user_input, _),
@@ -118,8 +114,7 @@ obter_progresso_nivel(UsuarioID, Nivel) :-
 
 adicionar_acerto(QuestaoID) :-
     usuario_corrente(UsuarioID, Senha, Nivel, AcertosAtuais, Salvos),
-    (member(QuestaoID, AcertosAtuais) ->
-        NovaListaAcertos = AcertosAtuais;
+    (member(QuestaoID, AcertosAtuais) -> NovaListaAcertos = AcertosAtuais;
         NovaListaAcertos = [QuestaoID | AcertosAtuais]
     ),
     retract(usuario(UsuarioID, _, _, _, _)),
@@ -129,8 +124,7 @@ adicionar_acerto(QuestaoID) :-
 
 adicionar_questao_salva(QuestaoID) :-
     usuario_corrente(UsuarioID, Senha, Nivel, Acertos, SalvosAtuais),
-     (member(QuestaoID, SalvosAtuais) ->
-        NovaListaSalvos = SalvosAtuais;
+    (member(QuestaoID, SalvosAtuais) -> NovaListaSalvos = SalvosAtuais;
         NovaListaSalvos = [QuestaoID | SalvosAtuais]
     ),
     retract(usuario(UsuarioID, _, _, _, _)),

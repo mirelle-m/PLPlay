@@ -6,8 +6,7 @@
 
 run :-
     pagina_inicial,
-    auth:loop_autenticacao ->
-        menu:menu_principal;
+    auth:loop_autenticacao -> menu:menu_principal;
         writeln('Encerrando o programa.').
 
 :- initialization(run, main).

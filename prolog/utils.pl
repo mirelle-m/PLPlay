@@ -17,18 +17,16 @@
 :- use_module(library(lists)).
 
 mostrar_banner(Caminho) :-
-    (   exists_file(Caminho) ->
+    (exists_file(Caminho) ->
         read_file_to_string(Caminho, Conteudo, []),
         split_string(Conteudo, "\n", "\r\n", Linhas),
-        (   current_output(Stream),
-            stream_property(Stream, tty(true))
-        ->  terminal_largura(Largura),
+        (current_output(Stream),
+            stream_property(Stream, tty(true)) ->  terminal_largura(Largura),
             centralizar_bloco(Largura, Linhas, LinhasCentralizadas),
             forall(member(L, LinhasCentralizadas), writeln(L));
-         % Fallback for non-tty output
             writeln(Conteudo)
         );
-           writeln("⚠️ Banner não encontrado!")
+        writeln("⚠️ Banner não encontrado!")
     ).
 
 limpar_tela :-
@@ -38,10 +36,9 @@ limpar_tela_completa :-
     format("\e[3J\e[2J\e[H", []).
 
 terminal_largura(Width) :-
-    (   current_prolog_flag(tty_control, true),
-        tty_size(_, Width)
-    ->  true;
-       Width = 80
+    (current_prolog_flag(tty_control, true),
+        tty_size(_, Width) -> true;
+        Width = 80
     ).
 
 centralizar(Largura, Texto, Centralizado) :-
@@ -74,12 +71,10 @@ prefix_spaces(N, Linha, Resultado) :-
 mostrar_logo_centralizada(Caminho) :-
     read_file_to_string(Caminho, Conteudo, []),
     split_string(Conteudo, "\n", "\r\n", Linhas),
-    (   current_output(Stream),
-        stream_property(Stream, tty(true))
-    ->  terminal_largura(Largura),
-        centralizar_bloco(Largura, Linhas, LinhasCentralizadas),
-        forall(member(L, LinhasCentralizadas), writeln(L));
-           % Fallback for non-tty output
+    (current_output(Stream),
+        stream_property(Stream, tty(true)) ->  terminal_largura(Largura),
+            centralizar_bloco(Largura, Linhas, LinhasCentralizadas),
+            forall(member(L, LinhasCentralizadas), writeln(L));
         writeln(Conteudo)
     ).
 
@@ -90,11 +85,11 @@ mostrar_logo_animada(Caminho) :-
     mostrar_linhas(LinhasCodes).
 
 pressionar_enter :-
-    writeln("\nPressione Enter para continuar..."),
+    nl, writeln("Pressione Enter para continuar..."),
     read_line_to_string(user_input, _).
 
 pressionar_enter_voltar :-
-    writeln("\nPressione Enter para voltar..."),
+    nl, writeln("Pressione Enter para voltar..."),
     read_line_to_string(user_input, _).
 
 linha_sep(Largura, Linha) :-
@@ -104,8 +99,7 @@ linha_sep(Largura, Linha) :-
 
 pagina_inicial :-
     mostrar_logo_animada("../banners/plplay.txt"),
-    sleep(1),
-    writeln("\n"),
+    sleep(1), nl,
     read_line_to_string(user_input, _),
     limpar_tela.
 

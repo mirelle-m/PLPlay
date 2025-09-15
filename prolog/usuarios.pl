@@ -1,9 +1,0 @@
-usuario("luiza123", "luiza123", "2", ['M1_Q8','M1_Q6','M1_Q5','M1_Q4','M1_Q3','M1_Q2','M1_Q1'], []).
-usuario("luizacarvalho", "luiza123", "1", [], []).
-usuario("tataco", "123", "9", ['M5_Q2','M1_Q4','M1_Q3'], ['M1_Q1']).
-usuario("fabiano", "fabiano", "1", ['M1_Q13','M1_Q11','M1_Q10','M1_Q9','M1_Q8','M1_Q7','M1_Q2','M1_Q6','M1_Q4','M1_Q3','M1_Q1'], ['M1_Q12']).
-usuario("fafafafaf", 'Fabiano@1234', "1", [], []).
-usuario("fabianoo", 'Fabiano@1234', "1", ['M1_Q10','M1_Q9','M1_Q7','M1_Q6','M1_Q5','M1_Q3','M1_Q2','M1_Q1'], ['M1_Q4']).
-usuario("fabianooo", 'F@biano1234', "1", ['M1_Q4','M1_Q8','M1_Q7','M1_Q6','M1_Q3','M1_Q2','M1_Q1'], []).
-usuario("fabianooooo", 'F@biano1234', "1", ['M1_Q10','M1_Q8','M1_Q7','M1_Q6','M1_Q5','M1_Q4','M1_Q3','M1_Q2','M1_Q1'], []).
-usuario("fabianoooooo", 'F@biano1234', "1", ['M1_Q10','M1_Q9','M1_Q7','M1_Q6','M1_Q5','M1_Q4','M1_Q3','M1_Q2','M1_Q1'], []).
